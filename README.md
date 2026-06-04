@@ -103,7 +103,7 @@ Drop a `.factory-check.json` in the repo to disable a rule, ignore paths, or tig
 ```
 
 - `disabledRules` blinds a rule across the whole repo. The report prints how many are disabled; if you disable more than a handful, the rule design is wrong — open an issue, don't paper over it.
-- `ignorePaths` (fast-glob, relative to repo root) excludes paths from the walk — e.g. a rule suite's own test files and fixtures, which contain intentional violations as bait. Path exclusion scopes *where* rules apply without blinding the rule itself. The kit ships this exact config to skip its own `__tests__/` tree.
+- `ignorePaths` (fast-glob, relative to repo root) excludes paths from the walk — e.g. a rule suite's own test files, fixtures, and rule-definition sources, which contain the very patterns they detect (as test bait or as detection heuristics). Path exclusion scopes *where* rules apply without blinding the rule itself. The kit ships this exact config to skip its own `__tests__/` tree and `check/rules/`.
 - `gateOnHigh` tightens the PR delta gate to also block a newly-introduced high (default: new-critical only).
 
 ### From source
