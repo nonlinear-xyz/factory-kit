@@ -13,5 +13,13 @@ describe("loadConfig", () => {
   it("defaults to an empty set when no config file exists", async () => {
     const cfg = await loadConfig(fixtures("clean"));
     expect(cfg.disabledRules.size).toBe(0);
+    expect(cfg.gateOnHigh).toBe(false);
+    expect(cfg.ignorePaths).toEqual([]);
+  });
+
+  it("reads the kit's own ignorePaths (fixtures excluded)", async () => {
+    const kitRoot = fileURLToPath(new URL("../..", import.meta.url));
+    const cfg = await loadConfig(kitRoot);
+    expect(cfg.ignorePaths).toContain("**/__tests__/**");
   });
 });

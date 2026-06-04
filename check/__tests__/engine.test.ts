@@ -49,6 +49,17 @@ describe("engine over fixtures", () => {
   });
 });
 
+describe("walk honors extra ignore patterns", () => {
+  it("excludes files matching an ignorePaths glob, scans them without it", async () => {
+    const root = fixtures(""); // the fixtures/ dir, with violations/ + others under it
+    const withIgnore = await walk(root, ["**/violations/**"]);
+    expect(withIgnore.files.some((f) => f.path.includes("violations/"))).toBe(false);
+
+    const without = await walk(root);
+    expect(without.files.some((f) => f.path.includes("violations/"))).toBe(true);
+  });
+});
+
 describe("run (end-to-end, including report)", () => {
   afterEach(() => vi.restoreAllMocks());
 

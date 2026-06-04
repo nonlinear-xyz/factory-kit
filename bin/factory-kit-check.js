@@ -24,9 +24,26 @@ async function main() {
     return;
   }
 
-  // First positional arg is the target repo; default to cwd.
-  const target = process.argv[2] ? path.resolve(process.argv[2]) : process.cwd();
-  const exitCode = await run({ targetDir: target });
+  // Parse: one optional positional (target repo, default cwd) plus flags.
+  //   --base <ref>   diff against <ref>: adds the PR delta + new-critical gate
+  //   --diff         scope reported findings to files changed vs --base
+  //   --json         emit machine-readable score+delta
+  //   --md           emit the Markdown scorecard (for the PR comment)
+  const argv = process.argv.slice(2);
+  let target = null;
+  let base;
+  let diffOnly = false;
+  let format = "term";
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--base") base = argv[++i];
+    else if (a === "--diff") diffOnly = true;
+    else if (a === "--json") format = "json";
+    else if (a === "--md") format = "md";
+    else if (!a.startsWith("--") && target === null) target = a;
+  }
+  const targetDir = target ? path.resolve(target) : process.cwd();
+  const exitCode = await run({ targetDir, base, diffOnly, format });
   process.exit(exitCode);
 }
 

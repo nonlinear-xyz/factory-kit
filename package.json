@@ -16,6 +16,7 @@
     "skills/",
     "agents/",
     "commands/",
+    "templates/",
     "CLAUDE.md",
     "VERSION",
     "install.sh",

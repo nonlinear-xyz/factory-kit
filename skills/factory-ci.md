@@ -185,6 +185,16 @@ Secrets required: `ANTHROPIC_API_KEY`. Permissions are tight: `contents: read`, 
 
 **Failure mode.** Claude reviewer wired as an advisory job (no required check, `continue-on-error: true`, or removed from branch protection) → the team learns the bot is optional within two weeks; the kit's pitfalls digest stops reviewing diffs; the gate becomes whatever humans noticed. Right move: when the bot is noisy, tune the prompt (narrower scope, sharper severity definitions) — never demote it to advisory.
 
+## Conformance gate — score the delta, not the developer
+
+**Principle.** A `Factory conformance` check runs `factory-kit-check` against every PR, posts one sticky scorecard comment, and fails only when the PR introduces a *new* critical-severity finding; pre-existing debt never blocks.
+
+**Why.** A deterministic conformance check is the cheapest tier of verification (see `factory-verification.md §The four-tier eval spectrum`) — it should run on every PR, for free, with no attention budget. But gating on the *absolute* score punishes whoever next touches a messy repo, which teaches people to avoid touching messy repos. Gating on the *delta* asks the only fair question — did this change make it worse where it matters? — so a clean PR lands in a debt-laden repo while the one PR introducing an auth bypass is stopped. The trade-off accepted: standing debt isn't vetoed per-PR; that's a backlog decision, not a merge decision.
+
+**Recipe.** `npx @nonlinear-labs/factory-kit add-ci` drops `templates/factory-conformance.yml` into `.github/workflows/`. It checks out with `fetch-depth: 0`, runs `factory-kit-check . --base origin/$BASE_REF --md`, posts the scorecard as a sticky comment (matched by the `<!-- factory-kit-check:scorecard -->` marker, updated in place), and fails the job only on a new critical. Add `Factory conformance` to branch protection's required checks to make the gate load-bearing; the comment stays advisory. Tighten to new-highs with `"gateOnHigh": true` in `.factory-check.json`. The full model — banded score, severity-aware coverage disclosure, delta gating — lives in `factory-verification.md`.
+
+**Failure mode.** Gating on the absolute score (red repo blocks every PR) → contributors route around the check, or the team disables it within a sprint. Right move: gate the delta, show the absolute for context.
+
 ## Branch protection — short list, load-bearing
 
 **Principle.** The required-checks list is short, every entry is non-negotiable, and the list is documented in the repo's `CLAUDE.md` so new contributors see the contract.
@@ -193,7 +203,7 @@ Secrets required: `ANTHROPIC_API_KEY`. Permissions are tight: `contents: read`, 
 
 **Recipe.** The repo's `CLAUDE.md` includes a `## Branch protection` section enumerating:
 
-- **Required checks:** `typecheck`, `lint`, `test`, `build`, `claude-review`
+- **Required checks:** `typecheck`, `lint`, `test`, `build`, `claude-review`, `Factory conformance`
 - **Require linear history:** yes (no merge commits on `main`)
 - **Require pull request before merging:** yes (no direct push to `main`)
 - **Dismiss stale reviews on new commits:** yes
@@ -241,3 +251,4 @@ The matrix-deploy half is from Encode/monorepo (GitHub Actions, ephemeral Neon b
 - `factory-pitfalls.md` — the checklist the Claude reviewer is primed with
 - `factory-commits.md` — owns the `commit-msg` Husky hook this skill extends with `pre-push`
 - `factory-security.md` — the audit lens the Claude reviewer applies via the prompt's focus areas
+- `factory-verification.md` — owns the conformance score model (banding, coverage disclosure, delta gating) the `Factory conformance` check surfaces

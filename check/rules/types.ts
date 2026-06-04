@@ -34,3 +34,14 @@ export interface Rule {
   detectFile?(file: RepoFile): Finding[];
   detectRepo?(files: RepoFile[]): Finding[];
 }
+
+// A named pitfall from factory-pitfalls.md that has NO rule yet — the eval
+// backlog. Tagged with the severity a rule *would* assign, so coverage can be
+// severity-aware: a clean repo under a checker blind to critical-class pitfalls
+// must not read as "all clear". `severityClass` is the honesty knob.
+export interface UncoveredPitfall {
+  id: string; // kebab slug, e.g. "phi-in-email-no-baa-check"
+  severityClass: Severity;
+  lang: Lang;
+  skillRef: string; // the factory-pitfalls.md entry it would enforce
+}

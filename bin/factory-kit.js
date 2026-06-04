@@ -141,9 +141,38 @@ function main() {
   console.log("Restart Claude Code to pick up the new skills.");
 }
 
+// `add-ci [targetRepo]` — drop the Factory conformance GitHub Action into a
+// repo's .github/workflows/. The Action is a per-repo file, not a ~/.claude
+// symlink, so it needs a copy, not a link. Idempotent: skips an existing file.
+function addCi(targetArg) {
+  const targetRepo = targetArg ? path.resolve(targetArg) : process.cwd();
+  const src = path.join(KIT_ROOT, "templates", "factory-conformance.yml");
+  if (!fs.existsSync(src)) {
+    console.error("factory-kit: templates/factory-conformance.yml missing from the kit.");
+    process.exit(1);
+  }
+  const dstDir = path.join(targetRepo, ".github", "workflows");
+  const dst = path.join(dstDir, "factory-conformance.yml");
+  ensureDir(dstDir);
+  if (fs.existsSync(dst)) {
+    console.log(`  skip   ${path.relative(targetRepo, dst)} (already exists — remove it to re-add)`);
+    return;
+  }
+  fs.copyFileSync(src, dst);
+  console.log(`  add    ${path.relative(targetRepo, dst)}`);
+  console.log("");
+  console.log("Next: commit the workflow, then add 'Factory conformance' to your");
+  console.log("branch-protection required checks so the new-critical gate is load-bearing.");
+}
+
 try {
-  main();
+  const cmd = process.argv[2];
+  if (cmd === "add-ci") {
+    addCi(process.argv[3]);
+  } else {
+    main();
+  }
 } catch (err) {
-  console.error(`factory-kit install failed: ${err.message ?? err}`);
+  console.error(`factory-kit failed: ${err.message ?? err}`);
   process.exit(1);
 }
