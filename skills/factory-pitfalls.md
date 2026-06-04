@@ -98,6 +98,13 @@ Each entry: one line, pointing at the skill section that owns it.
 - **Required-checks list drifts from workflow jobs** — `factory-ci.md §Branch protection — short list, load-bearing`
 - **Pre-push hook treated as the merge gate** — `factory-ci.md §Pre-push hooks — fast feedback, not the gate`
 
+### Verification
+
+- **Verification theater (green checks approved without comprehension)** — `factory-verification.md §Guardrails at the boundary, never the inner loop`
+- **Silent verification gap (pitfall documented but enforced by nothing)** — `factory-verification.md §Guardrails at the boundary, never the inner loop`
+- **Gating a PR on the absolute score instead of the delta** — `factory-verification.md §Gate the delta, contextualize the absolute`
+- **A precise score (87.3/100) over a heuristic instrument** — `factory-verification.md §Score the codebase, disclose the instrument`
+
 ### Observability
 
 - **Regenerated trace IDs at service hops** — `factory-observability.md §Trace ID — propagate, don't regenerate`

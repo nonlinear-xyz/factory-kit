@@ -35,6 +35,7 @@ Skills auto-load on the `factory-*` namespace:
 - **factory-ci** — single `ci.yml` merge gate, ephemeral PR DB, coverage floor, `anthropics/claude-code-action@v1` as required check, branch protection
 - **factory-commits** — Conventional Commits + required Linear issue ID; commitlint config, Husky hook, opencommit wiring
 - **factory-pitfalls** — flat cross-skill index of Failure mode blocks + process-level pitfalls without a skill home
+- **factory-verification** — four-tier eval spectrum (CLI rule / test / agent / human gate), evals-graduate-downward promotion pipeline, banded conformance score with severity-aware coverage disclosure, delta-gated GitHub Action that guards the PR boundary not the inner loop
 
 ## Specialist subagents (callable via Agent tool)
 
@@ -49,6 +50,7 @@ Skills auto-load on the `factory-*` namespace:
 - **llm-workflow-engineer** — LangGraph workflows, RAG, structured output, streaming
 - **security-engineer** — threat modeling, AI-code review, sensitive-data handling
 - **code-reviewer** — PR review against factory-pitfalls digest
+- **verification-engineer** — designs the verification strategy for a change (blast radius → required eval tiers → gaps); sister to `code-reviewer` (finds defects) and generalization of `db-migration-engineer`'s verify-stage to all changes
 
 
 ## Slash commands (auto-loaded into `~/.claude/commands/`)

@@ -60,7 +60,7 @@ factory-kit-check                 # check the current directory
 factory-kit-check ../some-repo    # check another repo
 ```
 
-It is **read-only** — it reads and judges, it never writes to your code. It exits non-zero on any `critical`/`high` finding, so it drops straight into a pre-push hook or CI step.
+It is **read-only** — it reads and judges, it never writes to your code. By default it exits non-zero on any `critical`/`high` finding; with `--base <ref>` it gates on the *delta* instead (see the conformance gate below). Run it on demand locally, or as the PR-boundary Action — not as a blocking inner-loop hook (see `factory-verification.md §Guardrails at the boundary`).
 
 Why deterministic (not an LLM): the rules are cheap, reproducible, and cost nothing per run, so you can run them on every save without thinking about it. Each rule is greppable code with a documented heuristic and a citation — no black box.
 
@@ -77,15 +77,34 @@ Why deterministic (not an LLM): the rules are cheap, reproducible, and cost noth
 
 Detection is regex/line-heuristic in v0 — precision-first, tuned against real repos. Rules are language-tagged (TS today; the seam for a Python `ast` sidecar is in place) and the report footer lists how many known pitfalls are not yet covered, so the tool never implies full coverage.
 
-### Configure
+### Score & coverage
 
-Drop a `.factory-check.json` in the repo to disable a rule:
+The report leads with a **banded verdict** — `pass` / `warn` / `fail`, severity-gated (one critical ⇒ fail; one high ⇒ warn). The precision of the verdict matches the precision of the instrument: a band, never a false-precision number. Alongside it, **coverage** — how many of the ~40 named pitfalls are machine-checked — with a severity-aware caveat naming any critical-class pitfall that has *no* rule, so a passing grade can't impersonate "nothing critical is wrong." The model lives in `check/score.ts` (pure, tested); the doctrine is `factory-verification.md`.
 
-```json
-{ "disabledRules": ["update-delete-no-where"] }
+### Conformance gate (GitHub Action)
+
+```sh
+factory-kit-check . --base origin/main --md    # render the PR scorecard
+npx @nonlinear-labs/factory-kit add-ci          # drop the Action into a repo
 ```
 
-The report prints how many rules are disabled. If you find yourself disabling more than a handful, the rule design is wrong — open an issue, don't paper over it.
+The `Factory conformance` Action posts one sticky scorecard comment per PR and fails the check **only on a newly-introduced critical** — it gates the *delta*, not the absolute, so pre-existing debt never blocks a PR and the developer's inner loop is never interrupted. Tighten to new-highs with `"gateOnHigh": true` in `.factory-check.json`. With `--base`, the CLI exit code follows this delta gate; without it, the legacy whole-repo critical/high gate applies, so it still drops into a simple CI step.
+
+### Configure
+
+Drop a `.factory-check.json` in the repo to disable a rule, ignore paths, or tighten the gate:
+
+```json
+{
+  "disabledRules": ["update-delete-no-where"],
+  "ignorePaths": ["**/__tests__/**"],
+  "gateOnHigh": false
+}
+```
+
+- `disabledRules` blinds a rule across the whole repo. The report prints how many are disabled; if you disable more than a handful, the rule design is wrong — open an issue, don't paper over it.
+- `ignorePaths` (fast-glob, relative to repo root) excludes paths from the walk — e.g. a rule suite's own test files and fixtures, which contain intentional violations as bait. Path exclusion scopes *where* rules apply without blinding the rule itself. The kit ships this exact config to skip its own `__tests__/` tree.
+- `gateOnHigh` tightens the PR delta gate to also block a newly-introduced high (default: new-critical only).
 
 ### From source
 
@@ -122,6 +141,7 @@ Synthesized cross-build conventions. Auto-loaded by Claude Code from `~/.claude/
 | `factory-ci` | Single `ci.yml` merge gate, ephemeral PR DB, coverage floor, Claude Code reviewer as required check |
 | `factory-commits` | Conventional Commits + required Linear-ID; commitlint config |
 | `factory-pitfalls` | Flat cross-skill index of Failure mode blocks + process-level pitfalls without a skill home |
+| `factory-verification` | Four-tier eval spectrum, evals-graduate-downward pipeline, banded conformance score with coverage disclosure, delta-gated conformance Action |
 
 ### Agents (specialist subagents)
 
@@ -139,7 +159,8 @@ Each is a Claude Code subagent file (YAML frontmatter + markdown body). Callable
 | `data-pipeline-engineer` | CSV ingestion, Python services, simulation envelopes |
 | `llm-workflow-engineer` | LangGraph workflows, RAG, structured output, streaming |
 | `security-engineer` | Threat-model a feature, audit AI-generated code, sensitive-data handling |
-| `code-reviewer` | PR review against `factory-pitfalls.md` checklist |
+| `code-reviewer` | PR review against `factory-pitfalls.md` checklist — finds defects |
+| `verification-engineer` | Designs the verification strategy for a change (blast radius → eval tiers → gaps); sister to `code-reviewer`, generalizes the migration verify-stage |
 
 ### Slash commands
 

@@ -249,3 +249,7 @@ def get_vector_store() -> VectorStorePort:
 ## Source patterns
 
 All from cothon — the strongest single-source domain in the kit. Reference repo for any new LLM/agent work.
+
+## Related
+
+- `factory-verification.md` — verifies the *factory's own output* (L1/L3). Evaluating a shipped LLM feature — golden datasets, LLM-as-judge, regression runs (L2) — is a distinct problem, deferred but named there. When the L2 companion is built, it pairs with this skill.

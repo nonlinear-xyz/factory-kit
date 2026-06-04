@@ -56,14 +56,18 @@ function gitignorePatterns(targetDir: string): string[] {
   return patterns;
 }
 
-export async function walk(targetDir: string): Promise<WalkResult> {
+// `extraIgnores` are fast-glob patterns from `.factory-check.json`'s
+// `ignorePaths` — folded into the same ignore set as the built-ins and
+// .gitignore. Passed in (not read here) so the same set applies to both the
+// head walk and the base-ref walk in git.ts, keeping the delta symmetric.
+export async function walk(targetDir: string, extraIgnores: string[] = []): Promise<WalkResult> {
   const entries = await fg(["**/*"], {
     cwd: targetDir,
     dot: false,
     onlyFiles: true,
     followSymbolicLinks: false,
     suppressErrors: true,
-    ignore: [...DEFAULT_IGNORES, ...gitignorePatterns(targetDir)],
+    ignore: [...DEFAULT_IGNORES, ...gitignorePatterns(targetDir), ...extraIgnores],
   });
 
   const files: RepoFile[] = [];
