@@ -126,6 +126,7 @@ Synthesized cross-build conventions. Auto-loaded by Claude Code from `~/.claude/
 | `factory-stack` | Locked + flexible stack decisions, decision criteria |
 | `factory-frontend` | DataTable + drawer-CRUD, RowActions, formatters, Mantine vs shadcn |
 | `factory-design` | Semantic token vocabulary, CSS-var + Tailwind bridge, dark/light as variable swap, primitives as token consumers, vocabulary-sprawl failure mode |
+| `factory-animation` | Attention budget per viewport, figure/ground (calm the ground), one focal motion per screen, diegetic-over-decorative, play-once-on-scroll-then-hold, reduced-motion end-state. Astro + Remotion |
 | `factory-auth` | Better Auth + orgs primary, RLS/Clerk criteria, wrapper interface |
 | `factory-data-layer` | Drizzle schema partitioning, multi-tenancy keys, timestamps helper |
 | `factory-db-migration` | Destructive prod-write runbook: preflight/mutate/verify/rollback, idempotency by natural key, Layer C backup independence, human-gated execution |

@@ -20,6 +20,7 @@ Skills auto-load on the `factory-*` namespace:
 - **factory-stack** — locked stack + decision criteria (read at project kickoff)
 - **factory-frontend** — DataTable + drawer-CRUD, RowActions, format helpers, semantic colors
 - **factory-design** — semantic token vocabulary, CSS-var + Tailwind bridge, dark/light as variable swap, primitives as token consumers, vocabulary-sprawl failure mode
+- **factory-animation** — attention budget per viewport, figure/ground (calm the ground, move the figure), one focal motion per screen, diegetic-over-decorative, play-once-on-scroll-then-hold over perpetual loops, reduced-motion end-state (Astro + Remotion)
 - **factory-auth** — provider pick, unified `requireAuth`/`requireRole`/`withOrgContext` wrapper
 - **factory-data-layer** — Drizzle schema partitioning, multi-tenancy, JSONB envelope, polymorphic tables
 - **factory-db-migration** — destructive prod-write runbook discipline: three-stage write contract (preflight/mutate/verify/rollback), idempotency by natural key, layered backup independence (Layer C), bidirectional update semantics, validation-at-parse, human-gated execution
