@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "factory-kit": {
+      "command": "node",
+      "args": ["bin/factory-kit-mcp.js"]
+    }
+  }
+}

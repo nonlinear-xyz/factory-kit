@@ -114,6 +114,24 @@ npm test                       # vitest, with a coverage floor
 node bin/factory-kit-check.js .
 ```
 
+## Control plane (MCP)
+
+The same engine the CLI and the Action run is also exposed as a **read-only MCP server** — so an agent can see a repo's conformance band *while it builds*, without leaving the chat. The CLI gates at the PR boundary; the MCP server advises at the build boundary. Same instrument, two surfaces.
+
+```jsonc
+// .mcp.json — ships in this repo; any MCP host (Claude Code, Cursor, Codex) picks it up
+{ "mcpServers": { "factory-kit": { "command": "node", "args": ["bin/factory-kit-mcp.js"] } } }
+```
+
+Tools (all read-only — *server observes, git owns*; nothing writes to your tree):
+
+- `factory_score` — band (pass/warn/fail) + severity counts + coverage for a repo
+- `factory_delta` — new vs fixed findings against a base ref, plus the new-critical gate
+- `factory_findings` — the individual findings, optionally filtered by severity
+- `factory_scorecard` — the Markdown scorecard (same artifact as the PR comment)
+
+The engine is also importable as a library — `import { analyze } from "@nonlinear-labs/factory-kit/engine"` returns the structured verdict (`{ score, delta, blocking, findings }`) with no printing or exit codes. That's the one dependency edge a hosted control plane consumes; it never forks the engine.
+
 ## What's in here
 
 ### Skills (`factory-*.md`)
