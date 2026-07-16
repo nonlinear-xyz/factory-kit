@@ -1,0 +1,20 @@
+{
+  "name": "factory-kit",
+  "version": "0.4.0",
+  "description": "Portable software-factory skills, Claude compatibility workflows, and Linear integration.",
+  "author": {
+    "name": "Nonlinear Labs",
+    "url": "https://github.com/nonlinear-xyz"
+  },
+  "homepage": "https://github.com/nonlinear-xyz/factory-kit",
+  "repository": "https://github.com/nonlinear-xyz/factory-kit",
+  "license": "MIT",
+  "keywords": [
+    "software-factory",
+    "skills",
+    "agents",
+    "linear"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

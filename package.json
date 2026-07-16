@@ -1,10 +1,10 @@
 {
   "name": "@nonlinear-labs/factory-kit",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publishConfig": {
     "access": "public"
   },
-  "description": "Claude Code skills, subagents, and slash commands — installed via per-file symlinks into ~/.claude/. The foundation for a software factory.",
+  "description": "Portable Open Agent Skills for Claude and Codex, with native plugins and a universal bootstrap installer.",
   "type": "module",
   "bin": {
     "factory-kit": "bin/factory-kit.js",
@@ -16,8 +16,12 @@
     "skills/",
     "agents/",
     "commands/",
+    "guidance/",
     "templates/",
-    "CLAUDE.md",
+    ".claude-plugin/",
+    ".codex-plugin/",
+    ".agents/",
+    ".mcp.json",
     "VERSION",
     "install.sh",
     "LICENSE",
@@ -47,7 +51,9 @@
   "keywords": [
     "claude",
     "claude-code",
+    "codex",
     "anthropic",
+    "open-agent-skills",
     "ai",
     "agents",
     "skills",

@@ -1,0 +1,38 @@
+{
+  "name": "factory-kit",
+  "version": "0.4.0",
+  "description": "Portable software-factory skills and Linear workflows for Codex.",
+  "author": {
+    "name": "Nonlinear Labs",
+    "url": "https://github.com/nonlinear-xyz"
+  },
+  "homepage": "https://github.com/nonlinear-xyz/factory-kit",
+  "repository": "https://github.com/nonlinear-xyz/factory-kit",
+  "license": "MIT",
+  "keywords": [
+    "software-factory",
+    "skills",
+    "agents",
+    "linear"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Factory Kit",
+    "shortDescription": "Portable software-factory workflows",
+    "longDescription": "A canonical Open Agent Skills tree for architecture, implementation, review, release, and Linear ticket workflows across Codex and Claude.",
+    "developerName": "Nonlinear Labs",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/nonlinear-xyz/factory-kit",
+    "defaultPrompt": [
+      "Scope this feature with Factory Kit before implementation.",
+      "Review this change against Factory Kit conventions.",
+      "Show my current Linear standup with Factory Kit."
+    ],
+    "brandColor": "#111111"
+  }
+}
