@@ -169,14 +169,11 @@ jobs:
             - The pitfall name and a link to the owning skill section
             - A concrete suggested change
 
-            Use `mcp__github_inline_comment__create_inline_comment` (with
-            `confirmed: true`) for specific code issues. Use `gh pr comment`
-            only for the high-level summary at the end.
+            Use the host's available GitHub inline-comment capability for
+            specific code issues. Use `gh pr comment` only for the high-level
+            summary at the end.
 
             Exit non-zero if any finding is severity `high`.
-
-          claude_args: |
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
 ```
 
 Secrets required: `ANTHROPIC_API_KEY`. Permissions are tight: `contents: read`, `pull-requests: write`, `id-token: write` — the bot reads code and writes review comments; it does not push to branches.

@@ -128,7 +128,7 @@ Hedging is the tell of an assistant. Make calls.
 
 ## Where this applies
 
-- Every terminal session — loaded via `~/.claude/CLAUDE.md`
+- Every terminal session when explicitly installed through Factory Kit's managed global-guidance block
 - `/entry`, `/submit`, `/close`, `/standup` — anything that writes to Linear
 - Commit bodies — `factory-commits.md` owns the syntactic frame; this skill governs the prose inside
 - PR descriptions — same shape as Linear comments
