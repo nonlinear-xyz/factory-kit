@@ -1,73 +1,238 @@
-# factory-kit
+# Factory Kit
 
-This is the foundation for a "software factory" - Claude skills, agents, and slash commands that are all automatally symlinked into `~/.claude/`. This allows you to pull upon these skills in any repository.
+Factory Kit is a portable software-factory playbook for Claude and Codex. One canonical [Open Agent Skills](https://agentskills.io/) tree contains the knowledge, ticket workflows, and specialist workflows. Claude commands and subagents are thin compatibility adapters over that tree.
 
-## Why this exists
-
-This repository is a synthesis of learnings across multiple production builds. In each one, I went through a learning journey to understand how to build a production-ready stack. Over countless hours, I tried to understand when and when not to implement specific components. Now, I've pulled my learnings into a set of skills & agents that I can use whenever I start a new project.
-
-This is also becoming a public record of how I am iterating towards a "software factory". Over time, as more code gets generated, I believe the differentiating layer will be the architectural decisions that get made during the build. I want to codify as many of these as I can throughout my journey so that I can consistently come back to them.
-
-## Structure — principles-first, stack-locked recipes
-
-Each `factory-*.md` skill leads each section with the **Principle** (one sentence, stack-agnostic), then **Why** (constraint → option → tradeoff), then **Recipe** (the Next.js / Drizzle / Better Auth / Mantine / Cloud Run shape we use), and a **Failure mode** block when there's one to name. A reader on a different stack can read the principle and why of any section and skip the recipe. The kit is opinionated on the recipe layer and shareable on the principle layer — by structure, not by separate files.
-
-## Layout
-
-```
-factory-kit/
-├── skills/                # synthesized factory-*.md docs, auto-loaded as ~/.claude/skills/
-├── agents/                # specialist subagents, callable via the Agent tool
-├── commands/              # slash commands (/standup, /entry, /submit, /close, /release, /setup-linear, /prompt, /kit-audit)
-├── check/                 # factory-kit-check — deterministic rule engine (TS source)
-├── bin/                   # factory-kit (installer) + factory-kit-check (the checker)
-├── CLAUDE.md              # user-level header listing the rosters above
-├── commitlint.config.cjs  # kit's own commitlint (Conventional Commits, no Linear-ID rule)
-├── VERSION
-└── install.sh             # per-file symlinks into ~/.claude/{skills,agents,commands}
-```
+The kit separates stack-independent principles from the opinionated Factory recipe: Next.js, Drizzle, Better Auth, Mantine or shadcn, Cloud Run, Linear, and the operational failure modes learned across production builds.
 
 ## Install
 
+Choose either the universal npm bootstrap or a native plugin marketplace. They are alternative installation methods, not prerequisites for each other.
+
+### Universal npm bootstrap
+
 ```sh
-npx @nonlinear-labs/factory-kit
+npx @nonlinear-labs/factory-kit install --target auto
 ```
 
-That's it. The CLI symlinks all skills, subagents, commands, and the user-level `CLAUDE.md` into `~/.claude/`. Restart Claude Code and the kit auto-loads in every project.
-
-`npx @nonlinear-labs/factory-kit` is idempotent — re-run anytime. Existing files at destinations are skipped with a warning; symlinks pointing into the cached package are refreshed.
-
-### Or install from a local clone
+`auto` detects whether Claude or Codex invoked the installer. If both or neither host can be identified, the command fails with an explicit `--target claude|codex|all` choice instead of guessing.
 
 ```sh
-# pin to a release (recommended)
-git checkout v0.1.5
+factory-kit install --target claude
+factory-kit install --target codex
+factory-kit install --target all
+factory-kit install --target auto --global-guidance
+factory-kit install --target auto --skip-linear
+```
+
+Running `npx @nonlinear-labs/factory-kit` without arguments retains the original Claude-only bootstrap target. Global guidance is still opt-in.
+
+The bootstrap installs directory symlinks for canonical skills. Claude also receives the existing command and subagent names. Re-running is idempotent. Factory Kit-owned legacy flat links are migrated; user-owned files and unrelated symlinks are preserved as conflicts.
+
+From a local clone:
+
+```sh
 ./install.sh
-
-# or track HEAD (moving edge)
-git checkout main
-./install.sh
 ```
 
-The shell installer and the npx CLI do the same thing; pick whichever fits the workflow.
-
-## factory-kit-check — enforce the standard
-
-The skills *describe* the conventions. `factory-kit-check` *enforces* a deterministic subset of them. Point it at a repo; it walks the code, runs a rule set, and prints findings — each one citing the `factory-pitfalls.md` entry it violates.
+### Claude plugin marketplace
 
 ```sh
-factory-kit-check                 # check the current directory
-factory-kit-check ../some-repo    # check another repo
+claude plugin marketplace add nonlinear-xyz/factory-kit
+claude plugin install factory-kit@factory-kit
 ```
 
-It is **read-only** — it reads and judges, it never writes to your code. By default it exits non-zero on any `critical`/`high` finding; with `--base <ref>` it gates on the *delta* instead (see the conformance gate below). Run it on demand locally, or as the PR-boundary Action — not as a blocking inner-loop hook (see `factory-verification.md §Guardrails at the boundary`).
+### Codex plugin marketplace
 
-Why deterministic (not an LLM): the rules are cheap, reproducible, and cost nothing per run, so you can run them on every save without thinking about it. Each rule is greppable code with a documented heuristic and a citation — no black box.
+```sh
+codex plugin marketplace add nonlinear-xyz/factory-kit
+codex plugin add factory-kit@factory-kit
+```
 
-### Rules (v0)
+The repository contains both catalogs and both manifests over the same root `skills/` tree. Native installs bundle the official Linear HTTP MCP endpoint; the host requests authorization.
 
-| Rule | Severity | Cites |
+### Pasteable agent prompt
+
+> Install Factory Kit with `npx @nonlinear-labs/factory-kit install --target auto`. Preserve all existing global instructions and user-owned files. Leave global guidance disabled unless I explicitly request it. If host detection is ambiguous, stop and tell me to choose Claude or Codex.
+
+## Global guidance
+
+Factory Kit never replaces a global instruction file. Guidance is installed only through a marked, reversible block assembled from shared content plus a host adapter.
+
+```sh
+factory-kit guidance add --target claude
+factory-kit guidance add --target codex
+factory-kit guidance add --target all
+
+factory-kit guidance remove --target claude
+factory-kit guidance remove --target codex
+factory-kit guidance remove --target all
+```
+
+The managed block lives in `~/.claude/CLAUDE.md` or `~/.codex/AGENTS.md`. Updates replace only that block. Removal preserves the surrounding file byte-for-byte.
+
+## Linear workflows
+
+Project configuration belongs at `.factory-kit/linear.json`:
+
+```json
+{
+  "teamKey": "NON",
+  "teamId": "<uuid>",
+  "projectId": "<optional-uuid>",
+  "projectName": "<optional-name>",
+  "states": {
+    "inReview": "In Review",
+    "done": "Done"
+  },
+  "branchPattern": "<owner>/<team-key>-<number>-<topic>"
+}
+```
+
+`.claude/linear.json` remains a read-only migration fallback. The setup-linear workflow writes the canonical path. The npm bootstrap registers Linear by default without storing credentials; `--skip-linear` leaves host MCP configuration untouched.
+
+## Diagnostics
+
+```sh
+factory-kit doctor --target claude
+factory-kit doctor --target codex
+factory-kit doctor --target all
+```
+
+`doctor` reports canonical skill links, native plugin detection, managed guidance, stale flat links, and the duplicate-skill risk when native and symlink installs coexist.
+
+## Architecture
+
+```text
+factory-kit/
+├── skills/<factory-name>/SKILL.md   # canonical knowledge and workflows
+├── commands/*.md                    # thin Claude slash-command adapters
+├── agents/*.md                      # thin Claude agents with skill preloads
+├── guidance/
+│   ├── shared.md
+│   ├── claude.md
+│   └── codex.md
+├── .claude-plugin/
+│   ├── plugin.json
+│   └── marketplace.json
+├── .codex-plugin/plugin.json
+├── .agents/plugins/marketplace.json
+├── .mcp.json                        # official Linear HTTP MCP
+├── bin/factory-kit.js               # universal installer and doctor
+├── check/                            # deterministic conformance engine
+└── templates/factory-conformance.yml
+```
+
+There are 41 canonical skills:
+
+- 21 principle-first knowledge skills: voice, stack, frontend, design, animation, auth, data layer, database migration, forms, API, data pipelines, testing, LLM workflows, prompting, security, observability, deployment, CI, commits, pitfalls, and verification.
+- 8 portable command workflows: standup, entry, submit, close, release, setup-linear, prompt, and kit-audit.
+- 12 portable specialist workflows: feature architect, frontend engineer, database schema architect, database migration engineer, auth wiring specialist, forms builder, API route engineer, data pipeline engineer, LLM workflow engineer, security engineer, code reviewer, and verification engineer.
+
+The canonical folder name and the `name` in each skill's YAML frontmatter are the same public identifier.
+
+### Knowledge skills
+
+| Skill | Domain |
+|---|---|
+| `factory-animation` | Motion discipline, attention budgets, diegetic motion, and reduced-motion fallbacks |
+| `factory-api` | Server actions and tRPC conventions, validation, pagination, errors, and audit logging |
+| `factory-auth` | Auth-provider decisions, authorization wrappers, session handling, and callback safety |
+| `factory-ci` | Merge-gate structure, required checks, automated review, and deploy separation |
+| `factory-commits` | Conventional Commits, Linear references, commitlint, and branch conventions |
+| `factory-data-layer` | Drizzle schemas, multi-tenancy, shared helpers, JSONB, and migration boundaries |
+| `factory-data-pipelines` | CSV ingestion, time-series envelopes, Python services, and simulation pipelines |
+| `factory-db-migration` | Production database runbooks: preflight, mutation, verification, rollback, and idempotency |
+| `factory-deployment` | Vercel, Cloud Run, Neon, Terraform, environment handling, and migration execution |
+| `factory-design` | Semantic tokens, theme variables, primitives, and design-vocabulary discipline |
+| `factory-forms` | react-hook-form, Zod variants, field registries, conditional fields, and uploads |
+| `factory-frontend` | CRUD surfaces, tables, drawers, row actions, formatting, and component-library choices |
+| `factory-llm-workflows` | LangGraph state, node factories, RAG, structured output, and SSE streaming |
+| `factory-observability` | PostHog, Sentry, trace IDs, structured logs, audit events, and PII boundaries |
+| `factory-pitfalls` | Cross-skill index of observed implementation and process failure modes |
+| `factory-prompting` | XML-tag prompt vocabulary, minimum-tagging discipline, and prompt structure |
+| `factory-security` | Sensitive-data handling, KMS, safe redirects, rate limiting, and AI-code safeguards |
+| `factory-stack` | Locked stack choices, flexible seams, and criteria for context-driven decisions |
+| `factory-testing` | Vitest, Playwright, co-location, shared test utilities, and coverage thresholds |
+| `factory-verification` | Verification tiers, eval graduation, coverage disclosure, and delta-gated conformance |
+| `factory-voice` | First-principles architectural communication for sessions, Linear, commits, and PRs |
+
+### Portable command-workflow skills
+
+| Skill | Claude adapter | Workflow |
 |---|---|---|
+| `factory-close` | `/close` | Complete a Linear issue, leave a closing comment, and clean up the branch or worktree |
+| `factory-entry` | `/entry` | Load a Linear issue into context and enter a focused planning session |
+| `factory-kit-audit` | `/kit-audit` | Measure baseline and on-demand token footprint and identify heavy assets |
+| `factory-prompt` | `/prompt` | Turn a rough ask into a structured prompt using the prompting vocabulary |
+| `factory-release` | `/release` | Synchronize versions, prepare notes, and run gated release and publication steps |
+| `factory-setup-linear` | `/setup-linear` | Configure portable Linear settings with legacy migration support |
+| `factory-standup` | `/standup` | Group open Linear work into in-flight, priority, and backlog views |
+| `factory-submit` | `/submit` | Move the branch-associated Linear issue to In Review |
+
+### Portable specialist-workflow skills
+
+| Skill | Claude agent adapter | Workflow |
+|---|---|---|
+| `factory-api-route-engineer` | `api-route-engineer` | Design endpoints using the factory's API, validation, pagination, and error conventions |
+| `factory-auth-wiring-specialist` | `auth-wiring-specialist` | Wire providers, roles, organizations, callbacks, and unified auth wrappers |
+| `factory-code-reviewer` | `code-reviewer` | Review a diff against factory conventions and the pitfalls checklist |
+| `factory-data-pipeline-engineer` | `data-pipeline-engineer` | Build ingestion, time-series, simulation, and adjacent Python-service workflows |
+| `factory-db-migration-engineer` | `db-migration-engineer` | Produce human-gated production mutation runbooks and verification criteria |
+| `factory-db-schema-architect` | `db-schema-architect` | Design Drizzle schemas, migrations, tenancy keys, and polymorphic data models |
+| `factory-feature-architect` | `feature-architect` | Turn a vague request into a scoped feature specification and specialist routing plan |
+| `factory-forms-builder` | `forms-builder` | Build complex forms with schema variants, field registries, and conditional behavior |
+| `factory-frontend-engineer` | `frontend-engineer` | Build house-style lists, forms, tables, drawers, and entity-editing surfaces |
+| `factory-llm-workflow-engineer` | `llm-workflow-engineer` | Build stateful LLM, RAG, structured-output, and streaming workflows |
+| `factory-security-engineer` | `security-engineer` | Threat-model features and produce concrete sensitive-data and authorization fixes |
+| `factory-verification-engineer` | `verification-engineer` | Design blast-radius-aware verification strategies and identify proof gaps |
+
+## Claude compatibility adapters
+
+Claude preserves the existing command and subagent names with thin adapters. Agent routing descriptions, tool permissions, models, and canonical skill preloads remain part of the compatibility surface.
+
+### Agents
+
+| Agent | Model | Preloaded skill | When to invoke |
+|---|---|---|---|
+| `feature-architect` | Sonnet | `factory-feature-architect` | Scope a vague client ask into a buildable feature specification |
+| `frontend-engineer` | Sonnet | `factory-frontend-engineer` | Scaffold lists, forms, drawers, tables, and entity-editing surfaces |
+| `db-schema-architect` | Sonnet | `factory-db-schema-architect` | Design schemas, migrations, tenancy keys, and polymorphic structures |
+| `db-migration-engineer` | Sonnet | `factory-db-migration-engineer` | Plan destructive production data changes with gated runbook discipline |
+| `auth-wiring-specialist` | Sonnet | `factory-auth-wiring-specialist` | Wire auth providers, RBAC, organizations, callbacks, and wrapper seams |
+| `forms-builder` | Sonnet | `factory-forms-builder` | Build multi-step, conditional, auto-saving, or upload-heavy forms |
+| `api-route-engineer` | Sonnet | `factory-api-route-engineer` | Design server actions, tRPC procedures, or external REST routes |
+| `data-pipeline-engineer` | Sonnet | `factory-data-pipeline-engineer` | Build ingestion, time-series, simulation, or Python-service pipelines |
+| `llm-workflow-engineer` | Sonnet | `factory-llm-workflow-engineer` | Build LangGraph, RAG, structured-output, or streaming LLM workflows |
+| `security-engineer` | Sonnet | `factory-security-engineer` | Threat-model a feature or audit sensitive and AI-generated code paths |
+| `code-reviewer` | Sonnet | `factory-code-reviewer` | Review a PR or diff against the factory's conventions; read-only |
+| `verification-engineer` | Sonnet | `factory-verification-engineer` | Design a verification plan and surface unverifiable gaps; read-only |
+
+### Slash commands
+
+- `/standup` — show open Linear tickets grouped by in-flight, top priority, and backlog
+- `/entry <issue>` — load a Linear issue into context and enter a focused planning session
+- `/submit [issue]` — move a Linear issue to In Review, auto-detecting it from the branch when omitted
+- `/close [issue]` — leave a closing comment, move the issue to Done, and clean up the branch or worktree
+- `/release [patch|minor|major]` — run the gated version, notes, tag, GitHub Release, and npm publication workflow
+- `/setup-linear` — configure `.factory-kit/linear.json`, using legacy Claude configuration as migration input
+- `/prompt <rough ask>` — convert a rough ask into a structured XML-tagged prompt
+- `/kit-audit` — measure baseline and on-demand token footprint and identify trim candidates
+
+## factory-kit-check
+
+Skills describe the conventions. `factory-kit-check` enforces a deterministic subset:
+
+```sh
+factory-kit-check
+factory-kit-check ../some-repo
+factory-kit-check . --base origin/main --md
+npx @nonlinear-labs/factory-kit add-ci
+```
+
+The checker is read-only. Without `--base`, critical and high findings produce a non-zero exit. With `--base`, the conformance gate evaluates the delta and blocks newly introduced critical findings by default.
+
+| Rule | Severity | Citation |
+|---|---:|---|
 | `admin-client-module-scope` | critical | `factory-auth.md §Admin client — always wrapped` |
 | `hardcoded-email-allowlist` | critical | `factory-auth.md §Hardcoded email allowlists` |
 | `public-procedure-mutation` | critical | `factory-auth.md §Auth from day one` |
@@ -75,24 +240,7 @@ Why deterministic (not an LLM): the rules are cheap, reproducible, and cost noth
 | `in-memory-rate-limiter` | high | `factory-security.md §Rate limiting` |
 | `mixed-trpc-server-actions` | high | `factory-api.md §API style — pick one` |
 
-Detection is regex/line-heuristic in v0 — precision-first, tuned against real repos. Rules are language-tagged (TS today; the seam for a Python `ast` sidecar is in place) and the report footer lists how many known pitfalls are not yet covered, so the tool never implies full coverage.
-
-### Score & coverage
-
-The report leads with a **banded verdict** — `pass` / `warn` / `fail`, severity-gated (one critical ⇒ fail; one high ⇒ warn). The precision of the verdict matches the precision of the instrument: a band, never a false-precision number. Alongside it, **coverage** — how many of the ~40 named pitfalls are machine-checked — with a severity-aware caveat naming any critical-class pitfall that has *no* rule, so a passing grade can't impersonate "nothing critical is wrong." The model lives in `check/score.ts` (pure, tested); the doctrine is `factory-verification.md`.
-
-### Conformance gate (GitHub Action)
-
-```sh
-factory-kit-check . --base origin/main --md    # render the PR scorecard
-npx @nonlinear-labs/factory-kit add-ci          # drop the Action into a repo
-```
-
-The `Factory conformance` Action posts one sticky scorecard comment per PR and fails the check **only on a newly-introduced critical** — it gates the *delta*, not the absolute, so pre-existing debt never blocks a PR and the developer's inner loop is never interrupted. Tighten to new-highs with `"gateOnHigh": true` in `.factory-check.json`. With `--base`, the CLI exit code follows this delta gate; without it, the legacy whole-repo critical/high gate applies, so it still drops into a simple CI step.
-
-### Configure
-
-Drop a `.factory-check.json` in the repo to disable a rule, ignore paths, or tighten the gate:
+Configure repository-specific exclusions in `.factory-check.json`:
 
 ```json
 {
@@ -102,107 +250,25 @@ Drop a `.factory-check.json` in the repo to disable a rule, ignore paths, or tig
 }
 ```
 
-- `disabledRules` blinds a rule across the whole repo. The report prints how many are disabled; if you disable more than a handful, the rule design is wrong — open an issue, don't paper over it.
-- `ignorePaths` (fast-glob, relative to repo root) excludes paths from the walk — e.g. a rule suite's own test files, fixtures, and rule-definition sources, which contain the very patterns they detect (as test bait or as detection heuristics). Path exclusion scopes *where* rules apply without blinding the rule itself. The kit ships this exact config to skip its own `__tests__/` tree and `check/rules/`.
-- `gateOnHigh` tightens the PR delta gate to also block a newly-introduced high (default: new-critical only).
-
-### From source
+## Development
 
 ```sh
-npm install && npm run build   # builds dist/ via tsup
-npm test                       # vitest, with a coverage floor
+npm install
+npm test
+npm run build
+npm pack --dry-run
 node bin/factory-kit-check.js .
+claude plugin validate --strict .claude-plugin/plugin.json
+claude plugin validate --strict .claude-plugin/marketplace.json
 ```
 
-## What's in here
-
-### Skills (`factory-*.md`)
-
-Synthesized cross-build conventions. Auto-loaded by Claude Code from `~/.claude/skills/`.
-
-| Skill | Domain |
-|---|---|
-| `factory-voice` | Architect voice, first-principles framing, structured shape for Linear / PR / commit prose (loaded every session) |
-| `factory-stack` | Locked + flexible stack decisions, decision criteria |
-| `factory-frontend` | DataTable + drawer-CRUD, RowActions, formatters, Mantine vs shadcn |
-| `factory-design` | Semantic token vocabulary, CSS-var + Tailwind bridge, dark/light as variable swap, primitives as token consumers, vocabulary-sprawl failure mode |
-| `factory-animation` | Attention budget per viewport, figure/ground (calm the ground), one focal motion per screen, diegetic-over-decorative, play-once-on-scroll-then-hold, reduced-motion end-state. Astro + Remotion |
-| `factory-auth` | Better Auth + orgs primary, RLS/Clerk criteria, wrapper interface |
-| `factory-data-layer` | Drizzle schema partitioning, multi-tenancy keys, timestamps helper |
-| `factory-db-migration` | Destructive prod-write runbook: preflight/mutate/verify/rollback, idempotency by natural key, Layer C backup independence, human-gated execution |
-| `factory-forms` | react-hook-form + Zod variants, field registry, masked inputs |
-| `factory-api` | Server actions vs tRPC criteria; validation; error shape |
-| `factory-data-pipelines` | CSV imports, time-series envelopes, Python service entry points |
-| `factory-testing` | Vitest + Playwright, `__tests__` co-location, provider wrappers, mock factories, coverage thresholds |
-| `factory-llm-workflows` | LangGraph TypedDict state, node factories, RAG, SSE streaming |
-| `factory-prompting` | XML-tag prompt vocabulary, minimum-tagging discipline, tag-sprawl failure mode. Paired with `/prompt` |
-| `factory-security` | KMS-at-rest, BAA/PHI, safe redirects, AI-code risk |
-| `factory-observability` | PostHog + Sentry day 1, activity logging, trace IDs |
-| `factory-deployment` | Vercel + Cloud Run + Terraform conventions |
-| `factory-ci` | Single `ci.yml` merge gate, ephemeral PR DB, coverage floor, Claude Code reviewer as required check |
-| `factory-commits` | Conventional Commits + required Linear-ID; commitlint config |
-| `factory-pitfalls` | Flat cross-skill index of Failure mode blocks + process-level pitfalls without a skill home |
-| `factory-verification` | Four-tier eval spectrum, evals-graduate-downward pipeline, banded conformance score with coverage disclosure, delta-gated conformance Action |
-
-### Agents (specialist subagents)
-
-Each is a Claude Code subagent file (YAML frontmatter + markdown body). Callable via the Agent tool.
-
-| Agent | When to invoke |
-|---|---|
-| `feature-architect` | Scope a vague client ask into a buildable feature spec; routes to the right specialists |
-| `frontend-engineer` | UI scaffolding, CRUD surfaces, component-library decisions |
-| `db-schema-architect` | Drizzle schemas, migrations, multi-tenancy keys |
-| `db-migration-engineer` | Destructive prod-write runbook discipline; sister to `db-schema-architect` — owns preflight/mutate/verify/rollback, idempotency proof, Layer C snapshot gating |
-| `auth-wiring-specialist` | Auth provider setup, RBAC, org context |
-| `forms-builder` | Multi-step forms, field registry, conditional visibility |
-| `api-route-engineer` | Endpoints, validation, error responses, pagination |
-| `data-pipeline-engineer` | CSV ingestion, Python services, simulation envelopes |
-| `llm-workflow-engineer` | LangGraph workflows, RAG, structured output, streaming |
-| `security-engineer` | Threat-model a feature, audit AI-generated code, sensitive-data handling |
-| `code-reviewer` | PR review against `factory-pitfalls.md` checklist — finds defects |
-| `verification-engineer` | Designs the verification strategy for a change (blast radius → eval tiers → gaps); sister to `code-reviewer`, generalizes the migration verify-stage |
-
-### Slash commands
-
-Linear ticket workflow — project-agnostic. Each project that wants these runs `/setup-linear` once to create `.claude/linear.json`.
-
-- `/setup-linear` — bootstrap `.claude/linear.json` (team, optional project, state names)
-- `/standup` — in-progress / in-review / top priority / backlog view
-- `/entry <issue>` — load a Linear issue into context and enter plan mode
-- `/submit [issue]` — move ticket to "In Review" (auto-detects from branch)
-- `/close [issue]` — closing comment + Done + delete local branch / exit worktree
-- `/release patch|minor|major` — bump VERSION, commit, tag with auto-generated notes (edited in Cursor), push after confirmation
-
-Branch convention: any branch containing `<teamkey>-<num>` parses out (e.g. `nishu/non-45-topic` → `NON-45`).
-
-Prompt authoring — no project config needed.
-
-- `/prompt <rough ask>` — convert a messy one-liner into a structured XML-tagged prompt using the `factory-prompting.md` vocabulary
-
-Kit diagnostics — no project config needed.
-
-- `/kit-audit` — measure the kit's token footprint (baseline vs on-demand, heaviest assets, trim candidates)
-
-### User-level `CLAUDE.md`
-
-`CLAUDE.md` in this repo is symlinked to `~/.claude/CLAUDE.md` and listed by Claude Code on every project. Per-project decisions still live in each project's own `CLAUDE.md` or `DECISIONS.md`.
+The test suite exercises temporary-home installs for Claude, Codex, both targets, auto detection, idempotency, legacy migration, conflicts, Linear configuration, managed guidance, duplicate-install diagnostics, skill frontmatter, references, and plugin metadata.
 
 ## Versioning
 
-SemVer, with a long `0.x` runway:
+SemVer uses a long `0.x` runway. Version `0.4.0` introduces the portable canonical skill tree and cross-host installation surfaces. Skill names, Claude command names, Claude agent names/frontmatter, installer commands, and checker citations are compatibility API.
 
-- **`0.x.0`** — new skill/agent/command, or behavior change downstream projects could feel
-- **`0.x.y`** — content edits inside existing files, doc tweaks, `install.sh` fixes
-- **`1.0.0`** — when renames stop and the kit feels stable enough to depend on
-
-The "API surface" is skill filenames + frontmatter, agent filenames + `subagent_type` names, slash command names, and `install.sh` behavior. Symlink installs track HEAD by default; `git checkout v0.x.y` before re-running `install.sh` to pin a release.
-
-## Building in public
-
-- [Releases](https://github.com/nonlinear-xyz/factory-kit/releases) — the changelog
-- [Discussions](https://github.com/nonlinear-xyz/factory-kit/discussions) — design questions in the open
-- Twitter/X: [@nishu_lahoti](https://x.com/nishu_lahoti) — short threads per minor tag
+No package publication, tag, push, or release is performed by repository validation.
 
 ## License
 

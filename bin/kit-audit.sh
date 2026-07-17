@@ -2,7 +2,8 @@
 # Measure the factory-kit's token footprint.
 #
 # Distinguishes:
-#   - Baseline cost: what every session pays (CLAUDE.md + agent/command registry frontmatter)
+#   - Baseline cost: skill/agent/command registry frontmatter
+#   - Opt-in guidance cost: shared guidance plus the selected host adapter
 #   - On-demand cost: what gets pulled in only when a skill is read, agent invoked, or command typed
 #
 # Token estimate uses ~4 chars per token (English-text rule of thumb). Real tokenizer counts
@@ -43,8 +44,9 @@ frontmatter_chars() {
 
 # --- measure baseline ---
 
-claude_md_chars=0
-[[ -f "${KIT_ROOT}/CLAUDE.md" ]] && claude_md_chars=$( file_chars "${KIT_ROOT}/CLAUDE.md" )
+shared_guidance_chars=$( file_chars "${KIT_ROOT}/guidance/shared.md" )
+claude_guidance_chars=$( file_chars "${KIT_ROOT}/guidance/claude.md" )
+codex_guidance_chars=$( file_chars "${KIT_ROOT}/guidance/codex.md" )
 
 agent_fm_total=0
 agent_count=0
@@ -73,16 +75,18 @@ done
 
 skill_total=0
 skill_count=0
+skill_fm_total=0
 declare -a skill_entries=()
-for f in "${KIT_ROOT}"/skills/*.md; do
+for f in "${KIT_ROOT}"/skills/*/SKILL.md; do
   skill_count=$(( skill_count + 1 ))
+  skill_fm_total=$(( skill_fm_total + $( frontmatter_chars "$f" ) ))
   body=$( file_chars "$f" )
   skill_total=$(( skill_total + body ))
-  skill_entries+=( "${body}|$( basename "$f" .md )" )
+  skill_entries+=( "${body}|$( basename "$( dirname "$f" )" )" )
 done
 shopt -u nullglob
 
-baseline_chars=$(( claude_md_chars + agent_fm_total + cmd_fm_total ))
+baseline_chars=$(( skill_fm_total + agent_fm_total + cmd_fm_total ))
 
 # --- output ---
 
@@ -92,10 +96,16 @@ echo "Factory-kit token footprint  (v${KIT_VERSION}, ~4 chars per token estimate
 echo
 
 echo "Baseline — loaded into every session"
-printf "  %-32s %8s tokens\n" "CLAUDE.md" "$( fmt $( to_tokens "$claude_md_chars" ) )"
+printf "  %-32s %8s tokens   (%d canonical skills × frontmatter only)\n" "Skill registry entries" "$( fmt $( to_tokens "$skill_fm_total" ) )" "$skill_count"
 printf "  %-32s %8s tokens   (%d agents × frontmatter only)\n" "Agent registry entries" "$( fmt $( to_tokens "$agent_fm_total" ) )" "$agent_count"
 printf "  %-32s %8s tokens   (%d commands × frontmatter only)\n" "Command registry entries" "$( fmt $( to_tokens "$cmd_fm_total" ) )" "$cmd_count"
 printf "  %-32s %8s tokens\n" "─ baseline total" "$( fmt $( to_tokens "$baseline_chars" ) )"
+echo
+
+echo "Opt-in managed guidance"
+printf "  %-32s %8s tokens\n" "Shared guidance" "$( fmt $( to_tokens "$shared_guidance_chars" ) )"
+printf "  %-32s %8s tokens\n" "Claude adapter" "$( fmt $( to_tokens "$claude_guidance_chars" ) )"
+printf "  %-32s %8s tokens\n" "Codex adapter" "$( fmt $( to_tokens "$codex_guidance_chars" ) )"
 echo
 
 echo "On-demand — loaded only when invoked / read"
@@ -125,9 +135,9 @@ echo
 # Trim flags — outliers only, not "anything large"
 echo "Trim candidates"
 flagged=0
-claude_md_tokens=$( to_tokens "$claude_md_chars" )
-if (( claude_md_tokens > 2500 )); then
-  echo "  - CLAUDE.md is ${claude_md_tokens} tokens — every session pays this; consider trimming to a pure index"
+shared_guidance_tokens=$( to_tokens "$shared_guidance_chars" )
+if (( shared_guidance_tokens > 2500 )); then
+  echo "  - shared guidance is ${shared_guidance_tokens} tokens — every opted-in session pays this; consider trimming"
   flagged=$(( flagged + 1 ))
 fi
 

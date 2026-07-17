@@ -24,28 +24,68 @@ jobs:
           set -euo pipefail
           fail=0
 
-          check_file_mentioned() {
-            local file="$1" label="$2"
-            local name
-            name=$(basename "$file" .md)
+          frontmatter_name() {
+            awk '
+              NR == 1 && $0 == "---" { in_frontmatter=1; next }
+              in_frontmatter && $0 == "---" { exit }
+              in_frontmatter && /^name:[[:space:]]+/ {
+                sub(/^name:[[:space:]]+/, "")
+                print
+                exit
+              }
+            ' "$1"
+          }
+
+          check_name_mentioned() {
+            local name="$1" label="$2"
             if ! grep -qF "\`${name}\`" README.md; then
               echo "::error file=README.md::${label} on disk but missing from README: ${name}"
               fail=1
             fi
           }
 
-          check_mention_exists() {
-            local name="$1" dir="$2" label="$3"
-            if [[ ! -f "${dir}/${name}.md" ]]; then
-              echo "::error file=README.md::${label} \`${name}\` mentioned in README but no file at ${dir}/${name}.md"
+          check_frontmatter_name() {
+            local file="$1" expected="$2" label="$3"
+            local actual
+            actual=$(frontmatter_name "$file")
+            if [[ "$actual" != "$expected" ]]; then
+              echo "::error file=${file}::${label} frontmatter name must be '${expected}', found '${actual:-<missing>}'"
               fail=1
             fi
           }
 
-          # Disk → README (every file should appear in a backtick)
-          for f in skills/factory-*.md;       do check_file_mentioned "$f" "Skill"; done
-          for f in agents/*.md;               do check_file_mentioned "$f" "Agent"; done
-          for f in commands/*.md;             do
+          check_mention_exists() {
+            local name="$1" path="$2" label="$3"
+            if [[ ! -f "$path" ]]; then
+              echo "::error file=README.md::${label} \`${name}\` mentioned in README but no file at ${path}"
+              fail=1
+            fi
+          }
+
+          shopt -s nullglob
+          skill_files=(skills/*/SKILL.md)
+          agent_files=(agents/*.md)
+          command_files=(commands/*.md)
+
+          if [[ ${#skill_files[@]} -eq 0 ]]; then
+            echo "::error file=skills::No canonical skills found at skills/*/SKILL.md"
+            fail=1
+          fi
+
+          # Disk → README. Public names come from paths and must agree with frontmatter.
+          for f in "${skill_files[@]}"; do
+            name=$(basename "$(dirname "$f")")
+            check_frontmatter_name "$f" "$name" "Skill"
+            check_name_mentioned "$name" "Skill"
+          done
+
+          for f in "${agent_files[@]}"; do
+            name=$(basename "$f" .md)
+            check_frontmatter_name "$f" "$name" "Agent"
+            check_name_mentioned "$name" "Agent"
+          done
+
+          for f in "${command_files[@]}"; do
             name=$(basename "$f" .md)
             if ! grep -qE "^- \`/${name}( |\`)" README.md; then
               echo "::error file=README.md::Command on disk but missing from README slash-commands list: /${name}"
@@ -53,12 +93,16 @@ jobs:
             fi
           done
 
-          # README → disk (every mentioned skill/agent file should exist)
-          for name in $(grep -oE '\`factory-[a-z-]+\`' README.md | tr -d '`' | sort -u); do
-            check_mention_exists "$name" "skills" "Skill"
+          # README roster → disk. First-column table entries and command bullets are API.
+          for name in $(grep -oE '^\| \`factory-[a-z-]+\` \|' README.md | tr -d '|` ' | sort -u); do
+            check_mention_exists "$name" "skills/${name}/SKILL.md" "Skill"
           done
-          for name in $(grep -oE '\`[a-z-]+-(architect|engineer|specialist|builder|reviewer)\`' README.md | tr -d '`' | sort -u); do
-            check_mention_exists "$name" "agents" "Agent"
+          for name in $(grep -oE '^\| \`[a-z-]+-(architect|engineer|specialist|builder|reviewer)\` \|' README.md | tr -d '|` ' | sort -u); do
+            [[ "$name" == factory-* ]] && continue
+            check_mention_exists "$name" "agents/${name}.md" "Agent"
+          done
+          for name in $(grep -oE '^- \`/[a-z-]+' README.md | cut -c 5- | sort -u); do
+            check_mention_exists "/${name}" "commands/${name}.md" "Command"
           done
 
           if [[ $fail -ne 0 ]]; then

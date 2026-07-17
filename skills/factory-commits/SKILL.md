@@ -176,5 +176,5 @@ Release commits are exempt from `linear-id-present` (see the rule body).
 
 ## Related
 
-- `~/.claude/commands/submit.md`, `close.md` — depend on the branch convention for issue-ID parsing
-- `~/.claude/commands/release.md` — parses these Conventional Commits to auto-generate release notes; `--no-verify` commits will land under `**other:**` and need manual rewording
+- `factory-submit` and `factory-close` — depend on the branch convention for issue-ID parsing
+- `factory-release` — parses these Conventional Commits to auto-generate release notes; `--no-verify` commits will land under `**other:**` and need manual rewording

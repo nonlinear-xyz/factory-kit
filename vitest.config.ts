@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 // gate runs `test:coverage`; thresholds live here, never overridden at CI.
 export default defineConfig({
   test: {
-    include: ["check/**/__tests__/**/*.test.ts"],
+    include: ["check/**/__tests__/**/*.test.ts", "test/**/*.test.ts"],
     coverage: {
       provider: "v8",
       include: ["check/**/*.ts"],
