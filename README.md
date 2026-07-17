@@ -128,7 +128,95 @@ There are 41 canonical skills:
 - 8 portable command workflows: standup, entry, submit, close, release, setup-linear, prompt, and kit-audit.
 - 12 portable specialist workflows: feature architect, frontend engineer, database schema architect, database migration engineer, auth wiring specialist, forms builder, API route engineer, data pipeline engineer, LLM workflow engineer, security engineer, code reviewer, and verification engineer.
 
-Claude preserves the existing public names: `/standup`, `/entry`, `/submit`, `/close`, `/release`, `/setup-linear`, `/prompt`, `/kit-audit`, plus all twelve specialist agent names. Their routing descriptions, tools, and models remain intact; only their workflow bodies moved to canonical skills.
+The canonical folder name and the `name` in each skill's YAML frontmatter are the same public identifier.
+
+### Knowledge skills
+
+| Skill | Domain |
+|---|---|
+| `factory-animation` | Motion discipline, attention budgets, diegetic motion, and reduced-motion fallbacks |
+| `factory-api` | Server actions and tRPC conventions, validation, pagination, errors, and audit logging |
+| `factory-auth` | Auth-provider decisions, authorization wrappers, session handling, and callback safety |
+| `factory-ci` | Merge-gate structure, required checks, automated review, and deploy separation |
+| `factory-commits` | Conventional Commits, Linear references, commitlint, and branch conventions |
+| `factory-data-layer` | Drizzle schemas, multi-tenancy, shared helpers, JSONB, and migration boundaries |
+| `factory-data-pipelines` | CSV ingestion, time-series envelopes, Python services, and simulation pipelines |
+| `factory-db-migration` | Production database runbooks: preflight, mutation, verification, rollback, and idempotency |
+| `factory-deployment` | Vercel, Cloud Run, Neon, Terraform, environment handling, and migration execution |
+| `factory-design` | Semantic tokens, theme variables, primitives, and design-vocabulary discipline |
+| `factory-forms` | react-hook-form, Zod variants, field registries, conditional fields, and uploads |
+| `factory-frontend` | CRUD surfaces, tables, drawers, row actions, formatting, and component-library choices |
+| `factory-llm-workflows` | LangGraph state, node factories, RAG, structured output, and SSE streaming |
+| `factory-observability` | PostHog, Sentry, trace IDs, structured logs, audit events, and PII boundaries |
+| `factory-pitfalls` | Cross-skill index of observed implementation and process failure modes |
+| `factory-prompting` | XML-tag prompt vocabulary, minimum-tagging discipline, and prompt structure |
+| `factory-security` | Sensitive-data handling, KMS, safe redirects, rate limiting, and AI-code safeguards |
+| `factory-stack` | Locked stack choices, flexible seams, and criteria for context-driven decisions |
+| `factory-testing` | Vitest, Playwright, co-location, shared test utilities, and coverage thresholds |
+| `factory-verification` | Verification tiers, eval graduation, coverage disclosure, and delta-gated conformance |
+| `factory-voice` | First-principles architectural communication for sessions, Linear, commits, and PRs |
+
+### Portable command-workflow skills
+
+| Skill | Claude adapter | Workflow |
+|---|---|---|
+| `factory-close` | `/close` | Complete a Linear issue, leave a closing comment, and clean up the branch or worktree |
+| `factory-entry` | `/entry` | Load a Linear issue into context and enter a focused planning session |
+| `factory-kit-audit` | `/kit-audit` | Measure baseline and on-demand token footprint and identify heavy assets |
+| `factory-prompt` | `/prompt` | Turn a rough ask into a structured prompt using the prompting vocabulary |
+| `factory-release` | `/release` | Synchronize versions, prepare notes, and run gated release and publication steps |
+| `factory-setup-linear` | `/setup-linear` | Configure portable Linear settings with legacy migration support |
+| `factory-standup` | `/standup` | Group open Linear work into in-flight, priority, and backlog views |
+| `factory-submit` | `/submit` | Move the branch-associated Linear issue to In Review |
+
+### Portable specialist-workflow skills
+
+| Skill | Claude agent adapter | Workflow |
+|---|---|---|
+| `factory-api-route-engineer` | `api-route-engineer` | Design endpoints using the factory's API, validation, pagination, and error conventions |
+| `factory-auth-wiring-specialist` | `auth-wiring-specialist` | Wire providers, roles, organizations, callbacks, and unified auth wrappers |
+| `factory-code-reviewer` | `code-reviewer` | Review a diff against factory conventions and the pitfalls checklist |
+| `factory-data-pipeline-engineer` | `data-pipeline-engineer` | Build ingestion, time-series, simulation, and adjacent Python-service workflows |
+| `factory-db-migration-engineer` | `db-migration-engineer` | Produce human-gated production mutation runbooks and verification criteria |
+| `factory-db-schema-architect` | `db-schema-architect` | Design Drizzle schemas, migrations, tenancy keys, and polymorphic data models |
+| `factory-feature-architect` | `feature-architect` | Turn a vague request into a scoped feature specification and specialist routing plan |
+| `factory-forms-builder` | `forms-builder` | Build complex forms with schema variants, field registries, and conditional behavior |
+| `factory-frontend-engineer` | `frontend-engineer` | Build house-style lists, forms, tables, drawers, and entity-editing surfaces |
+| `factory-llm-workflow-engineer` | `llm-workflow-engineer` | Build stateful LLM, RAG, structured-output, and streaming workflows |
+| `factory-security-engineer` | `security-engineer` | Threat-model features and produce concrete sensitive-data and authorization fixes |
+| `factory-verification-engineer` | `verification-engineer` | Design blast-radius-aware verification strategies and identify proof gaps |
+
+## Claude compatibility adapters
+
+Claude preserves the existing command and subagent names with thin adapters. Agent routing descriptions, tool permissions, models, and canonical skill preloads remain part of the compatibility surface.
+
+### Agents
+
+| Agent | Model | Preloaded skill | When to invoke |
+|---|---|---|---|
+| `feature-architect` | Sonnet | `factory-feature-architect` | Scope a vague client ask into a buildable feature specification |
+| `frontend-engineer` | Sonnet | `factory-frontend-engineer` | Scaffold lists, forms, drawers, tables, and entity-editing surfaces |
+| `db-schema-architect` | Sonnet | `factory-db-schema-architect` | Design schemas, migrations, tenancy keys, and polymorphic structures |
+| `db-migration-engineer` | Sonnet | `factory-db-migration-engineer` | Plan destructive production data changes with gated runbook discipline |
+| `auth-wiring-specialist` | Sonnet | `factory-auth-wiring-specialist` | Wire auth providers, RBAC, organizations, callbacks, and wrapper seams |
+| `forms-builder` | Sonnet | `factory-forms-builder` | Build multi-step, conditional, auto-saving, or upload-heavy forms |
+| `api-route-engineer` | Sonnet | `factory-api-route-engineer` | Design server actions, tRPC procedures, or external REST routes |
+| `data-pipeline-engineer` | Sonnet | `factory-data-pipeline-engineer` | Build ingestion, time-series, simulation, or Python-service pipelines |
+| `llm-workflow-engineer` | Sonnet | `factory-llm-workflow-engineer` | Build LangGraph, RAG, structured-output, or streaming LLM workflows |
+| `security-engineer` | Sonnet | `factory-security-engineer` | Threat-model a feature or audit sensitive and AI-generated code paths |
+| `code-reviewer` | Sonnet | `factory-code-reviewer` | Review a PR or diff against the factory's conventions; read-only |
+| `verification-engineer` | Sonnet | `factory-verification-engineer` | Design a verification plan and surface unverifiable gaps; read-only |
+
+### Slash commands
+
+- `/standup` — show open Linear tickets grouped by in-flight, top priority, and backlog
+- `/entry <issue>` — load a Linear issue into context and enter a focused planning session
+- `/submit [issue]` — move a Linear issue to In Review, auto-detecting it from the branch when omitted
+- `/close [issue]` — leave a closing comment, move the issue to Done, and clean up the branch or worktree
+- `/release [patch|minor|major]` — run the gated version, notes, tag, GitHub Release, and npm publication workflow
+- `/setup-linear` — configure `.factory-kit/linear.json`, using legacy Claude configuration as migration input
+- `/prompt <rough ask>` — convert a rough ask into a structured XML-tagged prompt
+- `/kit-audit` — measure baseline and on-demand token footprint and identify trim candidates
 
 ## factory-kit-check
 
