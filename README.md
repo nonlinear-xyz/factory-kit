@@ -122,10 +122,10 @@ factory-kit/
 └── templates/factory-conformance.yml
 ```
 
-There are 41 canonical skills:
+There are 42 canonical skills:
 
 - 21 principle-first knowledge skills: voice, stack, frontend, design, animation, auth, data layer, database migration, forms, API, data pipelines, testing, LLM workflows, prompting, security, observability, deployment, CI, commits, pitfalls, and verification.
-- 8 portable command workflows: standup, entry, submit, close, release, setup-linear, prompt, and kit-audit.
+- 9 portable command workflows: standup, entry, submit, pr-fix, close, release, setup-linear, prompt, and kit-audit.
 - 12 portable specialist workflows: feature architect, frontend engineer, database schema architect, database migration engineer, auth wiring specialist, forms builder, API route engineer, data pipeline engineer, LLM workflow engineer, security engineer, code reviewer, and verification engineer.
 
 The canonical folder name and the `name` in each skill's YAML frontmatter are the same public identifier.
@@ -163,6 +163,7 @@ The canonical folder name and the `name` in each skill's YAML frontmatter are th
 | `factory-close` | `/close` | Complete a Linear issue, leave a closing comment, and clean up the branch or worktree |
 | `factory-entry` | `/entry` | Load a Linear issue into context and enter a focused planning session |
 | `factory-kit-audit` | `/kit-audit` | Measure baseline and on-demand token footprint and identify heavy assets |
+| `factory-pr-fix` | `/pr-fix` | Fix a PR's open review comments, verify, push to the PR branch, and resolve the threads |
 | `factory-prompt` | `/prompt` | Turn a rough ask into a structured prompt using the prompting vocabulary |
 | `factory-release` | `/release` | Synchronize versions, prepare notes, and run gated release and publication steps |
 | `factory-setup-linear` | `/setup-linear` | Configure portable Linear settings with legacy migration support |
@@ -212,6 +213,7 @@ Claude preserves the existing command and subagent names with thin adapters. Age
 - `/standup` — show open Linear tickets grouped by in-flight, top priority, and backlog
 - `/entry <issue>` — load a Linear issue into context and enter a focused planning session
 - `/submit [issue]` — move a Linear issue to In Review, auto-detecting it from the branch when omitted
+- `/pr-fix [pr]` — fix a PR's unresolved review comments, run the repo's verify gate, push additive commits to the PR branch, and resolve the threads
 - `/close [issue]` — leave a closing comment, move the issue to Done, and clean up the branch or worktree
 - `/release [patch|minor|major]` — run the gated version, notes, tag, GitHub Release, and npm publication workflow
 - `/setup-linear` — configure `.factory-kit/linear.json`, using legacy Claude configuration as migration input
