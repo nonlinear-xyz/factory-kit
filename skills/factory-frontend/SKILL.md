@@ -213,6 +213,8 @@ If the project has a marketing site and an app, default to shadcn for both. If a
 
 **Failure mode.** Fleet-advisor's `RouteContext` + auto-persist hook — the client reducer and DB persistence desynced under concurrent edits, lost user changes silently.
 
+For the UI-local case (a second `useState` mirroring a value computable from props), see `factory-state-modeling.md §Derive, don't store`.
+
 ## Source of truth — DOM-owned vs React-owned
 
 **Principle.** Every mutable value has one authoritative home — the DOM node or React's render tree. Decide per *value*, not per form: a value that feeds a live-derived view (a running total, inline validation, a conditional field) belongs in React's tree; a write-mostly value that only matters at submit can stay DOM-owned.

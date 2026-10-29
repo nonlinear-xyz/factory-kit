@@ -122,9 +122,9 @@ factory-kit/
 └── templates/factory-conformance.yml
 ```
 
-There are 41 canonical skills:
+There are 42 canonical skills:
 
-- 21 principle-first knowledge skills: voice, stack, frontend, design, animation, auth, data layer, database migration, forms, API, data pipelines, testing, LLM workflows, prompting, security, observability, deployment, CI, commits, pitfalls, and verification.
+- 22 principle-first knowledge skills: voice, stack, frontend, state modeling, design, animation, auth, data layer, database migration, forms, API, data pipelines, testing, LLM workflows, prompting, security, observability, deployment, CI, commits, pitfalls, and verification.
 - 8 portable command workflows: standup, entry, submit, close, release, setup-linear, prompt, and kit-audit.
 - 12 portable specialist workflows: feature architect, frontend engineer, database schema architect, database migration engineer, auth wiring specialist, forms builder, API route engineer, data pipeline engineer, LLM workflow engineer, security engineer, code reviewer, and verification engineer.
 
@@ -152,6 +152,7 @@ The canonical folder name and the `name` in each skill's YAML frontmatter are th
 | `factory-prompting` | XML-tag prompt vocabulary, minimum-tagging discipline, and prompt structure |
 | `factory-security` | Sensitive-data handling, KMS, safe redirects, rate limiting, and AI-code safeguards |
 | `factory-stack` | Locked stack choices, flexible seams, and criteria for context-driven decisions |
+| `factory-state-modeling` | State unions, exhaustive switches, boundary casts, inert controls, derived values, and feature-flag lifecycle |
 | `factory-testing` | Vitest, Playwright, co-location, shared test utilities, and coverage thresholds |
 | `factory-verification` | Verification tiers, eval graduation, coverage disclosure, and delta-gated conformance |
 | `factory-voice` | First-principles architectural communication for sessions, Linear, commits, and PRs |
