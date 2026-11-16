@@ -122,10 +122,10 @@ factory-kit/
 └── templates/factory-conformance.yml
 ```
 
-There are 42 canonical skills:
+There are 44 canonical skills:
 
-- 22 principle-first knowledge skills: voice, stack, frontend, state modeling, design, animation, auth, data layer, database migration, forms, API, data pipelines, testing, LLM workflows, prompting, security, observability, deployment, CI, commits, pitfalls, and verification.
-- 8 portable command workflows: standup, entry, submit, close, release, setup-linear, prompt, and kit-audit.
+- 23 principle-first knowledge skills: voice, mentor, stack, frontend, state modeling, design, animation, auth, data layer, database migration, forms, API, data pipelines, testing, LLM workflows, prompting, security, observability, deployment, CI, commits, pitfalls, and verification.
+- 9 portable command workflows: standup, entry, submit, close, release, setup-linear, prompt, kit-audit, and learn.
 - 12 portable specialist workflows: feature architect, frontend engineer, database schema architect, database migration engineer, auth wiring specialist, forms builder, API route engineer, data pipeline engineer, LLM workflow engineer, security engineer, code reviewer, and verification engineer.
 
 The canonical folder name and the `name` in each skill's YAML frontmatter are the same public identifier.
@@ -147,6 +147,7 @@ The canonical folder name and the `name` in each skill's YAML frontmatter are th
 | `factory-forms` | react-hook-form, Zod variants, field registries, conditional fields, and uploads |
 | `factory-frontend` | CRUD surfaces, tables, drawers, row actions, formatting, and component-library choices |
 | `factory-llm-workflows` | LangGraph state, node factories, RAG, structured output, and SSE streaming |
+| `factory-mentor` | Operator-learning layer: mechanism glosses, derive-before-explain, assumption inversion, and defensibility flags |
 | `factory-observability` | PostHog, Sentry, trace IDs, structured logs, audit events, and PII boundaries |
 | `factory-pitfalls` | Cross-skill index of observed implementation and process failure modes |
 | `factory-prompting` | XML-tag prompt vocabulary, minimum-tagging discipline, and prompt structure |
@@ -164,6 +165,7 @@ The canonical folder name and the `name` in each skill's YAML frontmatter are th
 | `factory-close` | `/close` | Complete a Linear issue, leave a closing comment, and clean up the branch or worktree |
 | `factory-entry` | `/entry` | Load a Linear issue into context and enter a focused planning session |
 | `factory-kit-audit` | `/kit-audit` | Measure baseline and on-demand token footprint and identify heavy assets |
+| `factory-learn` | `/learn` | Switch learn mode on for one rep: the operator writes, the agent coaches, the rep is logged |
 | `factory-prompt` | `/prompt` | Turn a rough ask into a structured prompt using the prompting vocabulary |
 | `factory-release` | `/release` | Synchronize versions, prepare notes, and run gated release and publication steps |
 | `factory-setup-linear` | `/setup-linear` | Configure portable Linear settings with legacy migration support |
@@ -218,6 +220,7 @@ Claude preserves the existing command and subagent names with thin adapters. Age
 - `/setup-linear` — configure `.factory-kit/linear.json`, using legacy Claude configuration as migration input
 - `/prompt <rough ask>` — convert a rough ask into a structured XML-tagged prompt
 - `/kit-audit` — measure baseline and on-demand token footprint and identify trim candidates
+- `/learn [track] [what to practise]` — one learn-mode rep: you write the artifact, Claude coaches and logs it to `~/.factory/learner/`
 
 ## factory-kit-check
 

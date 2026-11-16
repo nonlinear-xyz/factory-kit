@@ -31,7 +31,9 @@ You're starting a focused work session on a single Linear issue. Load its contex
 
 7. **Flag issue quality** *(brief — one line if everything is fine).* Linear's house style is: short title with a concrete outcome, body only as long as needed. If the issue is missing a clear outcome, written as a user story, or sitting orphaned with no context links, name it. Don't fix it silently — surface it so the user can decide whether to rewrite before designing the change.
 
-8. **Enter planning mode.** Use the host's planning capability when available. Otherwise, present the implementation plan in chat and stop for explicit approval. Do not start coding before approval.
+8. **Offer one learn slice** *(only if `~/.factory/learner/profile.md` exists).* Read the active track's current rung, find the one slice of this ticket that fits it (usually a test, a state table or an invariant), and offer it in one line: "Learn slice: you write `<what>` in `<file>` (Rung N). Take it?" If accepted, mark that slice in the plan as the operator's, to run through `factory-learn.md` when the build reaches it. If declined, drop it silently. Never offer more than one.
+
+9. **Enter planning mode.** Use the host's planning capability when available. Otherwise, present the implementation plan in chat and stop for explicit approval. Do not start coding before approval.
 
 ## Style
 

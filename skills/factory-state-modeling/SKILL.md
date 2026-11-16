@@ -103,7 +103,7 @@ return <AdminShell mobileCommandPanel={panelOn} ... />;
 
 **Principle.** For any new or substantially changed component, the props type and the state union are approved first; the implementation follows, and the review leads with which states were added or removed.
 
-**Why.** Agentic development means the operator reviews outcomes, and outcomes hide the state model. A screenshot that looks right says nothing about how many states the component can be in. Approving the type first moves the review from "does it look right" to "which states exist," which is the question the incidents above all failed. It also costs almost nothing: a type and one sentence per state on when it occurs. For a fixed defect, the first failing test is the operator's to write; the agent offers the shape and the assertion. A test you wrote and watched fail for the right reason is a test you understand. See `factory-mentor` for the pedagogy behind this.
+**Why.** Agentic development means the operator reviews outcomes, and outcomes hide the state model. A screenshot that looks right says nothing about how many states the component can be in. Approving the type first moves the review from "does it look right" to "which states exist," which is the question the incidents above all failed. It also costs almost nothing: a type and one sentence per state on when it occurs. For a fixed defect, the first failing test is the operator's to write; the agent offers the shape and the assertion. A test you wrote and watched fail for the right reason is a test you understand. See `factory-mentor.md` for the pedagogy behind this.
 
 **Recipe.** The agent's review message opens with:
 
@@ -132,5 +132,5 @@ return <AdminShell mobileCommandPanel={panelOn} ... />;
 - `factory-frontend.md` owns the CRUD recipes (DataTable + drawer mode union) this reasoning produces
 - `factory-frontend-engineer.md` runs "What are the states?" as a workflow step before scaffolding
 - `factory-design.md` owns visual coherence; this skill does not touch tokens or layout
-- `factory-mentor` (pending on its own branch) owns the operator-learning contract that "types before code" serves
+- `factory-mentor.md` owns the operator-learning contract that "types before code" serves
 - `factory-pitfalls.md` indexes the failure modes above under Frontend

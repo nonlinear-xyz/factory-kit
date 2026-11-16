@@ -50,7 +50,9 @@ It does **not** merge a PR or push code — that's expected to have happened alr
    - If the current directory is a worktree (`git rev-parse --show-toplevel` differs from the main repo root), use the host's worktree-exit capability when available; otherwise use safe git worktree commands matching the user's confirmed merge-or-discard choice.
    - Otherwise: `git checkout main` (or the project's default branch) then `git branch -d <branch>`. Use `-D` only if `-d` refuses and the user explicitly approves (work is unmerged, confirm intent).
 
-8. **Confirm completion.** Print: `<KEY-N> closed. Branch deleted. Worktree exited (if applicable).`
+8. **Check the learn slice** *(only if the ticket's plan had one).* If the rep was done but isn't in the track file under `~/.factory/learner/`, record it now per `factory-learn.md`. If it was skipped, record it as skipped with one line on why. Nothing about the rep goes into the Linear comment.
+
+9. **Confirm completion.** Print: `<KEY-N> closed. Branch deleted. Worktree exited (if applicable).`
 
 ## Style
 
