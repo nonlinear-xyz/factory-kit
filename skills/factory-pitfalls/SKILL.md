@@ -40,6 +40,11 @@ Each entry: one line, pointing at the skill section that owns it.
 
 - **Two-way state-DB sync** — `factory-frontend.md §One direction of truth`
 - **Currency formatting drift across views** — `factory-frontend.md §Format helpers`
+- **Boolean prop explosion (more than three booleans on one component)** — `factory-state-modeling.md §Count the states; make the compiler count them`
+- **Cast inside component logic, not at an import boundary** — `factory-state-modeling.md §The boundary is where the bugs live`
+- **Inert control (UI control wired to no RPC argument or predicate)** — `factory-state-modeling.md §The boundary is where the bugs live`
+- **Mirrored derived state (second `useState` kept in sync)** — `factory-state-modeling.md §Derive, don't store`
+- **Feature flag threaded below the shell, or with no removal owner** — `factory-state-modeling.md §Feature flags: one read, two trees, a death date`
 
 ### Design system
 
