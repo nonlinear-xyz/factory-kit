@@ -44,7 +44,7 @@ Linear doesn't notify the agent when an operator drags a ticket to Todo. Until a
 5. **Write the working doc** (create it per `factory-log.md` if absent):
    - `## Prep`: `**Verdict:** <verdict> · read at <short-sha> · <ISO timestamp>`, then `**Assumptions:**` as one line each, then the proposed split or the blockers if any. At most 12 lines.
    - `## Codebase`: the code map. At most 12 lines. It's a cache pinned to the `read at` commit; entry refreshes it by diff.
-   - `## State model`: replace the section.
+   - `## State model`: on first prep, write it. Once the ticket has a `## Plan`, the target model is the reviewed contract from `factory-entry.md`: never replace it. If the refresh shows the current state moved or the target no longer fits, add one line to `## Findings` and a **Needs you** item proposing the exact change (`reply <n> go`); edit the section only after `go`, via `factory-log resolve`.
    - **Now block**: each `✗` or `?` that needs the operator, each proposed split (`reply <n> go`), and each proposed blocking relation (`reply <n> go`) becomes a **Needs you** item. Replace only the items an earlier prep added; leave every other item in place and number the new ones after them.
      - **First prep** (no `## Plan` yet, no agent label): the status line is `**Now:** prepped: <verdict>, not started`. Label `Needs decision` if anything is owed, otherwise none.
      - **Refresh of a ticket already in work**: keep the `**Now:**` status line as it is and add the verdict to it only if it changed (e.g. `… · prep: now Blocked`). Derive the label from the combined block per `factory-log.md` § Agent state, so `Working` and `Blocked` stay unless the combined state calls for something else.
