@@ -117,6 +117,8 @@ return <AdminShell mobileCommandPanel={panelOn} ... />;
 ...
 ```
 
+**Where it lives.** When the work has a Linear issue, post the state model with `factory-log state` before writing the component. It goes into the description's `## State model` section as `ts` code blocks plus a state → screen table. The operator argues about the union in comments there. Each agreed change replaces the section, and the review message links to it instead of repeating it.
+
 **Failure mode.** Review by screenshot. The surface looks right at 390px and desktop; the component has four booleans more than it did last week.
 
 ## Where this applies
@@ -134,3 +136,4 @@ return <AdminShell mobileCommandPanel={panelOn} ... />;
 - `factory-design.md` owns visual coherence; this skill does not touch tokens or layout
 - `factory-mentor.md` owns the operator-learning contract that "types before code" serves
 - `factory-pitfalls.md` indexes the failure modes above under Frontend
+- `factory-log.md` writes the state model into the Linear issue

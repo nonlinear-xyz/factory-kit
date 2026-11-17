@@ -76,6 +76,13 @@ Linear is a decision graph, not a stack of cards. Every write is a chance to mak
 
 Linear's framing: *"That system should understand intent, route work to the right actor, escalate when needed, and keep execution moving."* Future-you and future-agents both depend on the links you leave today.
 
+## Linear is the working surface
+
+While a ticket is in progress, anything that outlives the turn goes to its Linear issue through `factory-log.md`: the plan, the state model, findings, operator-owned decisions and (when enabled) learn reps. The terminal shows one line and the link. A chat thread mixes exploration, logs and answers into one scroll and makes the operator read prose to find the decision they owe. The issue keeps typed records the operator can scan, answer from any device, and that the next session inherits.
+
+- Post an operator-owned decision with `factory-log decision`, giving options and a default, then keep working on what it doesn't block. Ask in the terminal only when the operator is in the session right now and the answer blocks everything.
+- Don't summarize in the terminal what you just wrote to Linear.
+
 ## Terminal voice
 
 - Make calls. "I'll use cursor pagination here" not "Would you like me to consider cursor pagination?"
@@ -129,7 +136,7 @@ Hedging is the tell of an assistant. Make calls.
 ## Where this applies
 
 - Every terminal session when explicitly installed through Factory Kit's managed global-guidance block
-- `/entry`, `/submit`, `/close`, `/standup` — anything that writes to Linear
+- `/entry`, `/submit`, `/close`, `/standup`, `/log` — anything that writes to Linear
 - Commit bodies — `factory-commits.md` owns the syntactic frame; this skill governs the prose inside
 - PR descriptions — same shape as Linear comments
 

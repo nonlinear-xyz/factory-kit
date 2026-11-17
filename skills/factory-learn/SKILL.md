@@ -8,6 +8,8 @@ You're switching learn mode on (`factory-mentor.md` § Learn mode) for one rep. 
 
 **Invocation input:** optional. A track name (`typescript-testing`), a thing to practise ("the prior-period invariant"), or both. If empty, continue the active track from the progress log.
 
+**Surface.** If the project's `.factory-kit/linear.json` sets `learnSurface: "linear"` and the rep is anchored in a ticket, run the rep as a Linear thread through `factory-log learn`. Steps 3–6 happen there: set the rep in the opening comment; the operator replies with their picks, reasoning and code blocks; you coach and review in replies. Step 7 still writes the local log, with the thread link. Otherwise run the rep in the terminal.
+
 ## What to do
 
 1. **Read the learner state.** Read `~/.factory/learner/profile.md` and the track file for the requested or active track.
@@ -40,6 +42,7 @@ You're switching learn mode on (`factory-mentor.md` § Learn mode) for one rep. 
 - Never write the practised artifact into the repo, even when asked to "just finish it" mid-rep. Offer to end the rep instead. Ending a rep early is fine, and it gets recorded as unfinished.
 - One rep per invocation. A second rep needs a second invocation, so practice stays a choice rather than taking over the session.
 - The progress log is the operator's. Never write it into a project or client repo, and never include client data, credentials or customer details in it. Name files and tickets only.
+- A Linear learn thread is visible to everyone in that workspace. Use one only where the operator has opted in (`learnSurface: "linear"`). The same data rules apply: synthetic fixtures only.
 
 ## Style
 

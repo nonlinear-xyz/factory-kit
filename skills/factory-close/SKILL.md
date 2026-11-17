@@ -38,6 +38,8 @@ It does **not** merge a PR or push code — that's expected to have happened alr
    **Refs:** <PR # / merge commit SHA / related issue IDs / customer feedback URL if this resolved a customer ask>
    ```
 
+   Build **Tradeoff** and **Open** from the description's `## Decisions` section and the `**Finding:**` comments that `factory-log.md` wrote, not from memory of the chat. Link the decision threads rather than restating them. If a `**Decision needed:**` is still open, list it under **Open** and flag it before closing.
+
    The reader is someone scanning the issue six months from now to understand *why* this exists. Skip the play-by-play; record the load-bearing decisions. If a follow-up was punted, prefer "filed as `<KEY-N>`" over "TBD" — convert open questions into graph nodes.
 
 5. **Show the draft and ask for approval.** The user can edit tone or pull anything sensitive before it lands in Linear.
@@ -45,12 +47,13 @@ It does **not** merge a PR or push code — that's expected to have happened alr
 6. **On approval, in this order:**
    - Post the comment through the Linear integration with the issue ID and body.
    - Move the issue to Done through the Linear integration, using the configured `done` value. Resolve a state UUID by listing team statuses if names aren't accepted.
+   - Remove any label from the agent-state group (`agentLabels` in config) so the issue drops out of the review queue.
 
 7. **Clean up local state.** Confirm once more before any branch-deletion step — destructive operations aren't pre-authorized.
    - If the current directory is a worktree (`git rev-parse --show-toplevel` differs from the main repo root), use the host's worktree-exit capability when available; otherwise use safe git worktree commands matching the user's confirmed merge-or-discard choice.
    - Otherwise: `git checkout main` (or the project's default branch) then `git branch -d <branch>`. Use `-D` only if `-d` refuses and the user explicitly approves (work is unmerged, confirm intent).
 
-8. **Check the learn slice** *(only if the ticket's plan had one).* If the rep was done but isn't in the track file under `~/.factory/learner/`, record it now per `factory-learn.md`. If it was skipped, record it as skipped with one line on why. Nothing about the rep goes into the Linear comment.
+8. **Check the learn slice** *(only if the ticket's plan had one).* If the rep was done but isn't in the track file under `~/.factory/learner/`, record it now per `factory-learn.md`. If it was skipped, record it as skipped with one line on why. Nothing about the rep goes into the closing comment. If the rep ran as a Linear thread, leave the thread where it is.
 
 9. **Confirm completion.** Print: `<KEY-N> closed. Branch deleted. Worktree exited (if applicable).`
 

@@ -23,7 +23,7 @@ function skillDirs() {
     .sort();
 }
 
-const commandWorkflows = ["close", "entry", "kit-audit", "learn", "prompt", "release", "setup-linear", "standup", "submit"];
+const commandWorkflows = ["close", "entry", "kit-audit", "learn", "log", "prompt", "release", "setup-linear", "standup", "submit"];
 const specialistWorkflows = [
   "api-route-engineer",
   "auth-wiring-specialist",
@@ -46,7 +46,7 @@ describe("portable Factory Kit surface", () => {
     expect(flat).toEqual([]);
 
     const dirs = skillDirs();
-    expect(dirs).toHaveLength(44);
+    expect(dirs).toHaveLength(45);
     for (const name of dirs) {
       const content = fs.readFileSync(path.join(SKILLS, name, "SKILL.md"), "utf8");
       const yaml = frontmatter(content);
