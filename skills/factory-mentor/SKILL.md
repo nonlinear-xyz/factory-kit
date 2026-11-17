@@ -142,7 +142,7 @@ Read the log before setting a rep; write to it only after the operator has finis
 - Direct questions in conversation — derive-before-explain
 - One slice per ticket in learn mode, when the operator invokes `factory-learn` or accepts the slice `factory-entry` offers
 - **Not** inside autonomous build execution — teaching lands in the final writeup, never as a mid-task interrupt
-- **Not** in external writes — Linear comments, PR descriptions, and client-facing artifacts follow factory-voice alone; the pedagogy layer is for the operator, not the client
+- **Not** in external writes — Linear comments, PR descriptions, and client-facing artifacts follow factory-voice alone; the pedagogy layer is for the operator, not the client. One opt-in exception: where the project sets `learnSurface: "linear"`, learn-rep threads (and only those) run on the issue through `factory-log.md`
 
 ## Related
 

@@ -65,6 +65,8 @@ Linear's house style — adopt it. Titles are scannable; bodies are optional and
 
 **No user-story templates.** "As a X, I want Y so that Z" is the anti-pattern Linear is trying to delete. Skip it.
 
+**The ticket carries intent; prep carries ground truth.** Write the what and the why at creation and stop. When the ticket moves into Todo or In Progress, `factory-prep.md` checks its assumptions against the code and writes the state model into the working doc. Don't front-load a code review into a backlog ticket: it goes stale before anyone builds.
+
 ## Context density
 
 Linear is a decision graph, not a stack of cards. Every write is a chance to make the graph denser. Before you submit a comment or issue, ask:
@@ -75,6 +77,15 @@ Linear is a decision graph, not a stack of cards. Every write is a chance to mak
 - If a prior decision constrains this, is that decision linked?
 
 Linear's framing: *"That system should understand intent, route work to the right actor, escalate when needed, and keep execution moving."* Future-you and future-agents both depend on the links you leave today.
+
+## Linear is the working surface
+
+While a ticket is in progress, its state lives in one Linear working doc attached to the issue (`factory-log.md`). A short Now block at the top of the doc says where things stand and what the operator owes; the plan, state model, decisions and findings sit below it. The issue description stays the operator's. The terminal shows one line and the link.
+
+Moving prose from the terminal to Linear only relocates the overload, so the budget is what matters: the Now block is at most 8 lines, it is rewritten rather than added to, and the agent starts no comment threads.
+
+- Put an operator-owned question in the Now block as one line with a reply code, then keep working on what it doesn't block. Ask in the terminal only when the operator is in the session right now and the answer blocks everything.
+- Don't summarize in the terminal what you just wrote to Linear.
 
 ## Terminal voice
 
@@ -129,7 +140,7 @@ Hedging is the tell of an assistant. Make calls.
 ## Where this applies
 
 - Every terminal session when explicitly installed through Factory Kit's managed global-guidance block
-- `/entry`, `/submit`, `/close`, `/standup` — anything that writes to Linear
+- `/entry`, `/submit`, `/close`, `/standup`, `/log` — anything that writes to Linear
 - Commit bodies — `factory-commits.md` owns the syntactic frame; this skill governs the prose inside
 - PR descriptions — same shape as Linear comments
 

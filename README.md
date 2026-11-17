@@ -122,10 +122,10 @@ factory-kit/
 └── templates/factory-conformance.yml
 ```
 
-There are 44 canonical skills:
+There are 46 canonical skills:
 
 - 23 principle-first knowledge skills: voice, mentor, stack, frontend, state modeling, design, animation, auth, data layer, database migration, forms, API, data pipelines, testing, LLM workflows, prompting, security, observability, deployment, CI, commits, pitfalls, and verification.
-- 9 portable command workflows: standup, entry, submit, close, release, setup-linear, prompt, kit-audit, and learn.
+- 11 portable command workflows: standup, prep, entry, log, submit, close, release, setup-linear, prompt, kit-audit, and learn.
 - 12 portable specialist workflows: feature architect, frontend engineer, database schema architect, database migration engineer, auth wiring specialist, forms builder, API route engineer, data pipeline engineer, LLM workflow engineer, security engineer, code reviewer, and verification engineer.
 
 The canonical folder name and the `name` in each skill's YAML frontmatter are the same public identifier.
@@ -166,6 +166,8 @@ The canonical folder name and the `name` in each skill's YAML frontmatter are th
 | `factory-entry` | `/entry` | Load a Linear issue into context and enter a focused planning session |
 | `factory-kit-audit` | `/kit-audit` | Measure baseline and on-demand token footprint and identify heavy assets |
 | `factory-learn` | `/learn` | Switch learn mode on for one rep: the operator writes, the agent coaches, the rep is logged |
+| `factory-log` | `/log` | Keep a ticket's state in Linear: one working doc on the issue: a rewritten Now block, then plan, state model, decisions and findings |
+| `factory-prep` | `/prep` | Make a Todo or In Progress ticket ready: independent assumption check against the code, state model, commit-pinned code map, and a Ready / Split / Blocked / Needs decision verdict |
 | `factory-prompt` | `/prompt` | Turn a rough ask into a structured prompt using the prompting vocabulary |
 | `factory-release` | `/release` | Synchronize versions, prepare notes, and run gated release and publication steps |
 | `factory-setup-linear` | `/setup-linear` | Configure portable Linear settings with legacy migration support |
@@ -213,7 +215,9 @@ Claude preserves the existing command and subagent names with thin adapters. Age
 ### Slash commands
 
 - `/standup` — show open Linear tickets grouped by in-flight, top priority, and backlog
+- `/prep [issue|sweep]` — check a ticket's assumptions against the code and write its state model and verdict; `sweep` covers every Todo / In Progress ticket without a current prep
 - `/entry <issue>` — load a Linear issue into context and enter a focused planning session
+- `/log <now|plan|state|finding|decision|resolve|learn> [issue]` — keep the ticket's working doc in Linear current: the Now block, plan, state model, decisions and findings
 - `/submit [issue]` — move a Linear issue to In Review, auto-detecting it from the branch when omitted
 - `/close [issue]` — leave a closing comment, move the issue to Done, and clean up the branch or worktree
 - `/release [patch|minor|major]` — run the gated version, notes, tag, GitHub Release, and npm publication workflow
