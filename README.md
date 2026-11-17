@@ -217,6 +217,7 @@ Claude preserves the existing command and subagent names with thin adapters. Age
 - `/standup` — show open Linear tickets grouped by in-flight, top priority, and backlog
 - `/prep [issue|sweep]` — check a ticket's assumptions against the code and write its state model and verdict; `sweep` covers every Todo / In Progress ticket without a current prep
 - `/entry <issue>` — load a Linear issue into context and enter a focused planning session
+- `/log <now|plan|state|finding|decision|resolve|learn> [issue]` — keep the ticket's working doc in Linear current: the Now block, plan, state model, decisions and findings
 - `/submit [issue]` — move a Linear issue to In Review, auto-detecting it from the branch when omitted
 - `/close [issue]` — leave a closing comment, move the issue to Done, and clean up the branch or worktree
 - `/release [patch|minor|major]` — run the gated version, notes, tag, GitHub Release, and npm publication workflow
