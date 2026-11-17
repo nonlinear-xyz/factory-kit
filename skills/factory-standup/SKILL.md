@@ -29,6 +29,8 @@ You're giving the user a dev-standup view of their open Linear work in this proj
 
    **Backlog** — count + a sample of 3–5 from `Todo`/`Backlog` states, prioritized.
 
+   **Unprepped** *(only if any)* — Todo or In Progress issues whose working doc has no current `## Prep` (see `factory-prep.md`). IDs only, then "run `/prep sweep`".
+
    **Blocked** *(only if any)* — issues with open `blockedBy`. Show what's blocking each.
 
    **One-line recommendation:** the single best issue to pick up next, given priority and blockers. Cite the portable entry workflow with `<TEAM-N>`; in Claude, preserve the compatibility form `/entry <TEAM-N>`.

@@ -13,7 +13,7 @@ All the action lives in one place, the **working doc**: a Linear document attach
 | Part | Job | Who writes |
 |---|---|---|
 | **Now block**, the top of the working doc | Status, what the operator owes, what's blocked | Agent; rewritten in place, never appended |
-| **Sections** below it | Plan, state model, decisions, findings, learn rep | Agent; each section edited in place |
+| **Sections** below it | Prep, codebase, plan, state model, decisions, findings, learn rep | Agent; each section edited in place |
 | **Comments**, on the doc (preferred) or the issue | The operator's answers, pushback, and learn-rep code | Operator. The agent only *replies* to a comment the operator started. |
 | **Issue description** | The ticket itself: problem, scope, decisions the operator records | Operator. The agent doesn't write here. |
 
@@ -55,6 +55,7 @@ The first thing in the working doc, separated from the sections by a rule. **At 
 
 One Linear document attached to the issue, titled `<KEY-N> · Working doc`. Create it on the first write of any kind and reuse it from then on. Below the Now block, sections come in this order, each replaced in place:
 
+- `## Prep` and `## Codebase`: written by `factory-prep.md` when the ticket enters Todo or In Progress: the verdict, the assumption check, and a code map pinned to the commit it read.
 - `## Plan`: a short step walkthrough. Mark done steps `✓`. Then **Verify:** and **Not doing:**.
 - `## State model`: `ts` code blocks for the props type and the state union, plus a state → screen table (the recipe in `factory-state-modeling.md`).
 - `## Decisions`: one line each, `- <date> · <question> → <answer>. <why>`, newest first.
@@ -92,6 +93,7 @@ KAI-329 · needs you: 2 items → <issue link>
 
 - `factory-voice.md`: register and when to ask versus decide.
 - `factory-entry.md`: reads the Now block, the doc and new replies at session start, and runs `resolve`.
+- `factory-prep.md`: writes `## Prep`, `## Codebase` and the first `## State model`.
 - `factory-state-modeling.md`: what goes in `## State model`.
 - `factory-learn.md` and `factory-mentor.md`: learn-rep rules.
 - `factory-close.md`: builds the closing comment from `## Decisions` and clears the Now block and the label.

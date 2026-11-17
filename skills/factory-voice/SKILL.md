@@ -65,6 +65,8 @@ Linear's house style — adopt it. Titles are scannable; bodies are optional and
 
 **No user-story templates.** "As a X, I want Y so that Z" is the anti-pattern Linear is trying to delete. Skip it.
 
+**The ticket carries intent; prep carries ground truth.** Write the what and the why at creation and stop. When the ticket moves into Todo or In Progress, `factory-prep.md` checks its assumptions against the code and writes the state model into the working doc. Don't front-load a code review into a backlog ticket: it goes stale before anyone builds.
+
 ## Context density
 
 Linear is a decision graph, not a stack of cards. Every write is a chance to make the graph denser. Before you submit a comment or issue, ask:
