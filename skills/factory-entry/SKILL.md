@@ -20,7 +20,7 @@ You're starting a focused work session on a single Linear issue. Load its contex
 
 5. **Read the working state** that `factory-log.md` keeps: the attached working doc (its Now block first), and any comments on the doc or the issue posted since the last session. For each reply that answers a **Needs you** item, run `factory-log resolve` before planning. If the doc already has a `## Plan`, revise it; don't rewrite it from scratch.
 
-6. **Prep first.** Run `factory-prep.md` on the issue. It returns at once if the prep is current, refreshes the changed lines if it's stale, and does the full prep if there is none. Plan on top of its verdict: **Split** or **Blocked** means stop and surface it before planning; **Needs decision** means plan around the open items.
+6. **Prep first.** Run `factory-prep.md` on the issue. It returns at once if neither the ticket nor the cited code changed, re-judges the verdict if either did, and does the full prep if there is none. Plan on top of its verdict: **Split** or **Blocked** means stop and surface it before planning; **Needs decision** means plan around the open items.
 
 7. **Check blockers.** If the issue has open `blockedBy` relations, list them and **warn loudly** before proceeding. Ask whether the user wants to continue or pick a different ticket.
 
