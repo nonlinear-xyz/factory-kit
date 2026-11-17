@@ -39,7 +39,7 @@ You're starting a focused work session on a single Linear issue. Load its contex
 
 11. **Enter planning mode.** Use the host's planning capability when available. Otherwise, present the implementation plan in chat and stop for explicit approval. Do not start coding before approval.
 
-12. **On approval, write the plan to Linear.** Run `factory-log plan` and `factory-log now`, and set the agent-state label to `Working`. From then on, keep the Now block current; findings go to the doc as one line each, and operator-owned questions go under **Needs you**. Neither goes into terminal prose or comment threads.
+12. **On approval, write the plan to Linear.** Run `factory-log plan` and `factory-log now`, then set the agent-state label from the Now block per `factory-log.md`'s Agent state rule: `Needs decision` if **Needs you** still has items, otherwise `Working`. Approving the plan doesn't answer outstanding questions. From then on, keep the Now block current; findings go to the doc as one line each, and operator-owned questions go under **Needs you**. Neither goes into terminal prose or comment threads.
 
 ## Style
 
