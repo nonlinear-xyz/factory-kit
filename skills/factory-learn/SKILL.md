@@ -8,7 +8,7 @@ You're switching learn mode on (`factory-mentor.md` § Learn mode) for one rep. 
 
 **Invocation input:** optional. A track name (`typescript-testing`), a thing to practise ("the prior-period invariant"), or both. If empty, continue the active track from the progress log.
 
-**Surface.** If the project's `.factory-kit/linear.json` sets `learnSurface: "linear"` and the rep is anchored in a ticket, run the rep as a Linear thread through `factory-log learn`. Steps 3–6 happen there: set the rep in the opening comment; the operator replies with their picks, reasoning and code blocks; you coach and review in replies. Step 7 still writes the local log, with the thread link. Otherwise run the rep in the terminal.
+**Surface.** If the project's `.factory-kit/linear.json` sets `learnSurface: "linear"` and the rep is anchored in a ticket, run the rep in Linear through `factory-log learn`. Set the rep in the working doc's `## Learn rep` section, with one line under **Needs you**. The operator comments with their picks, reasoning and code blocks, and you coach in replies under their comment. Step 7 still writes the local log, with the comment link. Otherwise run the rep in the terminal.
 
 ## What to do
 

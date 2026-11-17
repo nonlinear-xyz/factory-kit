@@ -117,7 +117,7 @@ return <AdminShell mobileCommandPanel={panelOn} ... />;
 ...
 ```
 
-**Where it lives.** When the work has a Linear issue, post the state model with `factory-log state` before writing the component. It goes into the description's `## State model` section as `ts` code blocks plus a state → screen table. The operator argues about the union in comments there. Each agreed change replaces the section, and the review message links to it instead of repeating it.
+**Where it lives.** When the work has a Linear issue, put the state model in the ticket's working doc with `factory-log state` before writing the component: `ts` code blocks plus a state → screen table. The operator pushes back in a comment; each agreed change replaces the section. The review message links to the doc instead of repeating it.
 
 **Failure mode.** Review by screenshot. The surface looks right at 390px and desktop; the component has four booleans more than it did last week.
 

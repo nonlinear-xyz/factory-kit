@@ -18,7 +18,7 @@ You're starting a focused work session on a single Linear issue. Load its contex
 
 4. **Fetch the project** through the Linear integration if the issue belongs to one and you haven't loaded it yet this session.
 
-5. **Read the working records** that `factory-log.md` writes: the `## Plan`, `## State model` and `## Decisions` sections of the description, and any open `**Decision needed:**` or `**Learn rep:**` comment threads. For each decision answered since the last session (a ticked box or a reply), run `factory-log resolve` before planning. If a `## Plan` already exists, revise it; don't rewrite it from scratch.
+5. **Read the working state** that `factory-log.md` keeps: the attached working doc (its Now block first), and any comments on the doc or the issue posted since the last session. For each reply that answers a **Needs you** item, run `factory-log resolve` before planning. If the doc already has a `## Plan`, revise it; don't rewrite it from scratch.
 
 6. **Check blockers.** If the issue has open `blockedBy` relations, list them and **warn loudly** before proceeding. Ask whether the user wants to continue or pick a different ticket.
 
@@ -35,11 +35,11 @@ You're starting a focused work session on a single Linear issue. Load its contex
 
 9. **Offer one learn slice** *(only if `~/.factory/learner/profile.md` exists).* Read the active track's current rung, find the one slice of this ticket that fits it (usually a test, a state table or an invariant), and offer it in one line: "Learn slice: you write `<what>` in `<file>` (Rung N). Take it?" If accepted, mark that slice in the plan as the operator's, to run through `factory-learn.md` when the build reaches it. If declined, drop it silently. Never offer more than one.
 
-10. **State model first** *(stateful or frontend changes only).* Post the props type and state union with `factory-log state`, so the operator reviews the union in Linear before approving the plan.
+10. **State model first** *(stateful or frontend changes only).* Put the props type and state union in the working doc with `factory-log state`, so the operator can review the union before approving the plan.
 
 11. **Enter planning mode.** Use the host's planning capability when available. Otherwise, present the implementation plan in chat and stop for explicit approval. Do not start coding before approval.
 
-12. **On approval, write the plan to Linear.** Run `factory-log plan` with the approved plan and set the agent-state label to `Working`. From then on, findings and operator-owned decisions go to the issue through `factory-log`, not into terminal prose.
+12. **On approval, write the plan to Linear.** Run `factory-log plan` and `factory-log now`, and set the agent-state label to `Working`. From then on, keep the Now block current; findings go to the doc as one line each, and operator-owned questions go under **Needs you**. Neither goes into terminal prose or comment threads.
 
 ## Style
 

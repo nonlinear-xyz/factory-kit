@@ -166,7 +166,7 @@ The canonical folder name and the `name` in each skill's YAML frontmatter are th
 | `factory-entry` | `/entry` | Load a Linear issue into context and enter a focused planning session |
 | `factory-kit-audit` | `/kit-audit` | Measure baseline and on-demand token footprint and identify heavy assets |
 | `factory-learn` | `/learn` | Switch learn mode on for one rep: the operator writes, the agent coaches, the rep is logged |
-| `factory-log` | `/log` | Write the plan, state model, findings, decisions and learn reps into the Linear issue; agent-state labels make it a review queue |
+| `factory-log` | `/log` | Keep a ticket's state in Linear: one working doc on the issue: a rewritten Now block, then plan, state model, decisions and findings |
 | `factory-prompt` | `/prompt` | Turn a rough ask into a structured prompt using the prompting vocabulary |
 | `factory-release` | `/release` | Synchronize versions, prepare notes, and run gated release and publication steps |
 | `factory-setup-linear` | `/setup-linear` | Configure portable Linear settings with legacy migration support |

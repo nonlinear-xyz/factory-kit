@@ -78,9 +78,11 @@ Linear's framing: *"That system should understand intent, route work to the righ
 
 ## Linear is the working surface
 
-While a ticket is in progress, anything that outlives the turn goes to its Linear issue through `factory-log.md`: the plan, the state model, findings, operator-owned decisions and (when enabled) learn reps. The terminal shows one line and the link. A chat thread mixes exploration, logs and answers into one scroll and makes the operator read prose to find the decision they owe. The issue keeps typed records the operator can scan, answer from any device, and that the next session inherits.
+While a ticket is in progress, its state lives in one Linear working doc attached to the issue (`factory-log.md`). A short Now block at the top of the doc says where things stand and what the operator owes; the plan, state model, decisions and findings sit below it. The issue description stays the operator's. The terminal shows one line and the link.
 
-- Post an operator-owned decision with `factory-log decision`, giving options and a default, then keep working on what it doesn't block. Ask in the terminal only when the operator is in the session right now and the answer blocks everything.
+Moving prose from the terminal to Linear only relocates the overload, so the budget is what matters: the Now block is at most 8 lines, it is rewritten rather than added to, and the agent starts no comment threads.
+
+- Put an operator-owned question in the Now block as one line with a reply code, then keep working on what it doesn't block. Ask in the terminal only when the operator is in the session right now and the answer blocks everything.
 - Don't summarize in the terminal what you just wrote to Linear.
 
 ## Terminal voice
