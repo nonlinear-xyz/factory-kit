@@ -1,4 +1,4 @@
-import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { exec, must, shell, tail } from "./exec.js";
 import type { RepoConfig } from "./types.js";
@@ -49,7 +49,7 @@ function verify(dir: string, branch: string): string {
   if (upstream.status === 0 && PROTECTED.has(upstream.stdout.trim().replace(/^[^/]+\//, ""))) {
     throw new Error(`Worktree branch tracks ${upstream.stdout.trim()}. Unset it (git branch --unset-upstream) before autopilot pushes.`);
   }
-  return dir;
+  return realpathSync(dir);
 }
 
 /** Copy env files from the main checkout and run the repo's setup commands. */

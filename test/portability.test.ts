@@ -46,7 +46,7 @@ describe("portable Factory Kit surface", () => {
     expect(flat).toEqual([]);
 
     const dirs = skillDirs();
-    expect(dirs).toHaveLength(46);
+    expect(dirs).toHaveLength(47);
     for (const name of dirs) {
       const content = fs.readFileSync(path.join(SKILLS, name, "SKILL.md"), "utf8");
       const yaml = frontmatter(content);
