@@ -6,12 +6,19 @@ export type AgentName = "claude" | "codex";
 
 export type Stage = "config" | "worktree" | "canary" | "prep" | "build" | "gate" | "handoff";
 
-export type Verdict = "Ready" | "Split" | "Blocked" | "Needs decision";
+export type Verdict = "Ready" | "Split" | "Blocked" | "Needs decision" | "Shipped" | "Duplicate";
+
+/** Why a stale ticket was closed, with evidence the runner checked itself. */
+export type StaleClose =
+  | { reason: "shipped"; commit: string }
+  | { reason: "duplicate"; of: string };
 
 export type RunOutcome =
   | { kind: "bounced"; stage: Stage; reason: string }
   | { kind: "dry-run"; worktree: string; branch: string; changedFiles: string[] }
-  | { kind: "handed-off"; prUrl: string; branch: string };
+  | { kind: "handed-off"; prUrl: string; branch: string }
+  /** Already on main or duplicated. `applied` is false on a dry run or with staleAction "comment". */
+  | { kind: "closed"; close: StaleClose; applied: boolean };
 
 /** One headless agent turn (a run, or a resume with feedback). */
 export interface AgentResult {
@@ -47,6 +54,8 @@ export interface RepoAutopilotConfig {
   linearTools: string[];
   maxTurns: number;
   commitType: string;
+  /** What to do when prep finds a ticket already shipped or duplicated. */
+  staleAction: "close" | "comment";
 }
 
 /** Machine policy: `~/.config/factory-kit/autopilot.json`. */
@@ -62,6 +71,7 @@ export interface RepoConfig {
   repoRoot: string;
   teamKey: string;
   inReviewState: string;
+  doneState: string;
   autopilot: RepoAutopilotConfig;
 }
 
@@ -73,5 +83,5 @@ export interface Ticket {
   branchName: string;
   stateName: string;
   labels: string[];
-  teamStates: { id: string; name: string }[];
+  teamStates: { id: string; name: string; type: string }[];
 }

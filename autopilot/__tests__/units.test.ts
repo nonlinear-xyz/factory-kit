@@ -50,9 +50,15 @@ describe("denyPaths", () => {
 
 describe("prep verdict", () => {
   it("takes the last VERDICT line and its reason", () => {
-    expect(parseVerdict("VERDICT: Split\n…\n**VERDICT:** Needs decision\nREASON: rates unclear")).toEqual({ verdict: "Needs decision", reason: "rates unclear" });
+    expect(parseVerdict("VERDICT: Split\n…\n**VERDICT:** Needs decision\nREASON: rates unclear")).toMatchObject({ verdict: "Needs decision", reason: "rates unclear" });
     expect(parseVerdict("VERDICT: ready").verdict).toBe("Ready");
     expect(parseVerdict("no verdict here").verdict).toBeNull();
+  });
+
+  it("reads the evidence for Shipped and Duplicate", () => {
+    expect(parseVerdict("VERDICT: Shipped\nREASON: done in #203\nEVIDENCE: `51774a4`")).toMatchObject({ verdict: "Shipped", evidence: "51774a4" });
+    expect(parseVerdict("VERDICT: Duplicate\nDUPLICATE_OF: kai-317")).toMatchObject({ verdict: "Duplicate", duplicateOf: "KAI-317" });
+    expect(parseVerdict("VERDICT: Shipped\nEVIDENCE: see PR").evidence).toBeNull();
   });
 });
 
@@ -91,7 +97,7 @@ describe("linear", () => {
     expect(linearToken({ LINEAR_API_KEY: "env-key" })).toBe("env-key");
   });
 
-  const issue = { id: "u1", identifier: "KAI-240", title: "T", url: "https://l/KAI-240", branchName: "nishu/kai-240-t", state: { name: "Todo" }, labels: { nodes: [{ name: "autopilot" }] }, team: { states: { nodes: [{ id: "s-rev", name: "In Review" }] } } };
+  const issue = { id: "u1", identifier: "KAI-240", title: "T", url: "https://l/KAI-240", branchName: "nishu/kai-240-t", state: { name: "Todo" }, labels: { nodes: [{ name: "autopilot" }] }, team: { states: { nodes: [{ id: "s-rev", name: "In Review", type: "started" }, { id: "s-dup", name: "Duplicate", type: "canceled" }] } } };
   const reply = (data: unknown) => ({ ok: true, status: 200, json: async () => ({ data }) }) as Response;
 
   it("maps an issue and moves it by state name", async () => {
@@ -102,6 +108,15 @@ describe("linear", () => {
     await l.moveTo(t, "in review");
     const body = JSON.parse((fetchImpl.mock.calls[1]![1] as RequestInit).body as string);
     expect(body.variables).toEqual({ id: "u1", input: { stateId: "s-rev" } });
+  });
+
+  it("marks a duplicate with the relation, then the Duplicate state", async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(reply({ issue })).mockResolvedValue(reply({ ok: { success: true } }));
+    const l = new Linear("key", fetchImpl as unknown as typeof fetch);
+    await l.markDuplicate(await l.ticket("KAI-240"), "canon-id");
+    const bodies = fetchImpl.mock.calls.slice(1).map((c) => JSON.parse((c[1] as RequestInit).body as string).variables);
+    expect(bodies[0]).toEqual({ input: { issueId: "u1", relatedIssueId: "canon-id", type: "duplicate" } });
+    expect(bodies[1]).toEqual({ id: "u1", input: { stateId: "s-dup" } });
   });
 
   it("surfaces GraphQL errors and unknown states", async () => {

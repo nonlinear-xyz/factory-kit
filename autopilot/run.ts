@@ -5,7 +5,9 @@ import { bounceComment, handoffComment, publish } from "./handoff.js";
 import { record } from "./ledger.js";
 import { Linear } from "./linear.js";
 import { buildPrompt, fixPrompt, parseVerdict, prepPrompt } from "./prompts.js";
-import type { AgentName, AgentResult, RunOutcome, Stage } from "./types.js";
+import { exec } from "./exec.js";
+import { staleComment, verifyShipped } from "./stale.js";
+import type { AgentName, AgentResult, RunOutcome, Stage, StaleClose } from "./types.js";
 import { ensureWorktree, lock, prepareWorktree } from "./worktree.js";
 
 export interface RunOptions {
@@ -66,7 +68,29 @@ export async function runTicket(o: RunOptions): Promise<RunOutcome> {
     const prep = agent.run({ ...base, prompt: prepPrompt(ticket, !o.dryRun), maxTurns: 40 });
     tally(prep);
     if (prep.limited) return await bounce("prep", `${o.agent} hit a usage limit.`);
-    const { verdict, reason } = parseVerdict(prep.text);
+    const { verdict, reason, evidence, duplicateOf } = parseVerdict(prep.text);
+    if (verdict === "Shipped" || verdict === "Duplicate") {
+      let close: StaleClose;
+      if (verdict === "Shipped") {
+        const check = evidence ? verifyShipped(cfg.repoRoot, cfg.autopilot.baseBranch, evidence) : { ok: false as const, detail: "Prep said Shipped but cited no commit." };
+        if (!check.ok) return await bounce("prep", `Prep verdict: Shipped, but the evidence didn't check out. ${check.detail} ${reason}`);
+        close = { reason: "shipped", commit: check.commit };
+      } else {
+        if (!duplicateOf || duplicateOf === ticket.identifier) return await bounce("prep", `Prep said Duplicate but cited no other ticket. ${reason}`);
+        const other = await linear.ticket(duplicateOf).catch(() => null);
+        if (!other) return await bounce("prep", `Prep said Duplicate of ${duplicateOf}, which Linear can't find. ${reason}`);
+        close = { reason: "duplicate", of: other.identifier };
+      }
+      const apply = !o.dryRun && cfg.autopilot.staleAction === "close";
+      o.log(`prep: ${verdict} (${close.reason === "shipped" ? close.commit.slice(0, 10) : close.of})${apply ? " · closing" : " · not closing"}`);
+      if (!o.dryRun) {
+        const subject = close.reason === "shipped" ? exec("git", ["-C", cfg.repoRoot, "log", "-1", "--format=%s", close.commit]).stdout.trim() : "";
+        await linear.comment(ticket.id, staleComment(close, reason, apply, subject));
+        if (apply && close.reason === "shipped") await linear.moveTo(ticket, cfg.doneState);
+        if (apply && close.reason === "duplicate") await linear.markDuplicate(ticket, (await linear.ticket(close.of)).id);
+      }
+      return await finish({ kind: "closed", close, applied: apply });
+    }
     if (verdict !== "Ready") return await bounce("prep", verdict ? `Prep verdict: ${verdict}. ${reason}` : `Prep returned no verdict.\n${prep.text.slice(-800)}`);
     o.log("prep: Ready");
 

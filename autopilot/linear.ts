@@ -44,7 +44,7 @@ export class Linear {
         id identifier title url branchName
         state { name }
         labels { nodes { name } }
-        team { states { nodes { id name } } }
+        team { states { nodes { id name type } } }
       } }`,
       { id: identifier },
     );
@@ -66,6 +66,13 @@ export class Linear {
     await this.query(`mutation C($input: CommentCreateInput!) { commentCreate(input: $input) { success } }`, { input: { issueId, body } });
   }
 
+  /** Mark `ticket` a duplicate of `canonicalId`, then move it to the team's Duplicate (or first canceled) state. */
+  async markDuplicate(ticket: Ticket, canonicalId: string): Promise<void> {
+    await this.query(`mutation R($input: IssueRelationCreateInput!) { issueRelationCreate(input: $input) { success } }`, { input: { issueId: ticket.id, relatedIssueId: canonicalId, type: "duplicate" } });
+    const state = ticket.teamStates.find((s) => /duplicate/i.test(s.name)) ?? ticket.teamStates.find((s) => s.type === "canceled");
+    if (state) await this.query(`mutation U($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success } }`, { id: ticket.id, input: { stateId: state.id } });
+  }
+
   async moveTo(ticket: Ticket, stateName: string): Promise<void> {
     const state = ticket.teamStates.find((s) => s.name.toLowerCase() === stateName.toLowerCase());
     if (!state) throw new Error(`Team has no state named "${stateName}".`);
@@ -81,5 +88,5 @@ interface RawIssue {
   branchName: string;
   state: { name: string };
   labels: { nodes: { name: string }[] };
-  team: { states: { nodes: { id: string; name: string }[] } };
+  team: { states: { nodes: { id: string; name: string; type: string }[] } };
 }

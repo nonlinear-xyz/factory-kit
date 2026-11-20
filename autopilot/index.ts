@@ -77,6 +77,11 @@ export async function main(args: string[]): Promise<number> {
       case "dry-run":
         console.log(`[autopilot] dry run green · ${outcome.changedFiles.length} files in ${outcome.worktree}`);
         return 0;
+      case "closed": {
+        const what = outcome.close.reason === "shipped" ? `already shipped in ${outcome.close.commit.slice(0, 10)}` : `duplicate of ${outcome.close.of}`;
+        console.log(`[autopilot] ${what} · ${outcome.applied ? "closed in Linear" : "not closed (dry run or staleAction: comment)"}`);
+        return 0;
+      }
       case "bounced":
         console.log(`[autopilot] bounced at ${outcome.stage}: ${outcome.reason}`);
         return 2;

@@ -18,6 +18,7 @@ const REPO_DEFAULTS: RepoAutopilotConfig = {
   linearTools: ["mcp__linear-server", "mcp__linear", "Agent", "Task"],
   maxTurns: 60,
   commitType: "fix",
+  staleAction: "close",
 };
 
 /** Parse the repo's `.factory-kit/linear.json`. Throws when autopilot isn't configured. */
@@ -32,6 +33,7 @@ export function parseRepoConfig(repoRoot: string, raw: unknown): RepoConfig {
     repoRoot,
     teamKey: String(json.teamKey ?? ""),
     inReviewState: states.inReview ?? "In Review",
+    doneState: states.done ?? "Done",
     autopilot,
   };
 }

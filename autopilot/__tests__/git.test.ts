@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { exec, must } from "../exec.js";
 import { changedFiles, gate } from "../gate.js";
 import type { RepoConfig } from "../types.js";
+import { staleComment, verifyShipped } from "../stale.js";
 import { ensureWorktree, lock, prepareWorktree, worktreePath } from "../worktree.js";
 
 function fixture(autopilot: Partial<RepoConfig["autopilot"]> = {}): RepoConfig {
@@ -22,7 +23,8 @@ function fixture(autopilot: Partial<RepoConfig["autopilot"]> = {}): RepoConfig {
     repoRoot: repo,
     teamKey: "KAI",
     inReviewState: "In Review",
-    autopilot: { triggerLabel: "autopilot", baseBranch: "main", verifyCmd: "true", canaryCmd: null, setup: [], copyFiles: [".env.local"], denyPaths: ["supabase/**"], allowedTools: [], linearTools: [], maxTurns: 5, commitType: "fix", ...autopilot },
+    doneState: "Done",
+    autopilot: { triggerLabel: "autopilot", baseBranch: "main", verifyCmd: "true", canaryCmd: null, setup: [], copyFiles: [".env.local"], denyPaths: ["supabase/**"], allowedTools: [], linearTools: [], maxTurns: 5, commitType: "fix", staleAction: "close", ...autopilot },
   };
 }
 
@@ -65,5 +67,24 @@ describe("gate", () => {
     must("mkdir", ["-p", path.join(dir, "supabase")]);
     writeFileSync(path.join(dir, "supabase/m.sql"), "x\n");
     expect(gate(cfg, dir)).toMatchObject({ ok: false, deniedFiles: ["supabase/m.sql"] });
+  });
+});
+
+describe("stale close", () => {
+  it("accepts only a commit that exists and is on origin/main", () => {
+    const cfg = fixture();
+    const repo = cfg.repoRoot;
+    const onMain = must("git", ["-C", repo, "rev-parse", "HEAD"]);
+    expect(verifyShipped(repo, "main", onMain.slice(0, 8))).toEqual({ ok: true, commit: onMain });
+
+    must("git", ["-C", repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "local only"]);
+    const local = must("git", ["-C", repo, "rev-parse", "HEAD"]);
+    expect(verifyShipped(repo, "main", local)).toMatchObject({ ok: false, detail: expect.stringContaining("not on origin/main") });
+    expect(verifyShipped(repo, "main", "deadbeef")).toMatchObject({ ok: false, detail: expect.stringContaining("doesn't exist") });
+  });
+
+  it("says what it did and how to undo it", () => {
+    expect(staleComment({ reason: "shipped", commit: "51774a4abcdef" }, "fixed in #203", true, "Floating command panel (#203)")).toMatch(/51774a4abc[\s\S]*closed this ticket as done[\s\S]*Reopen/);
+    expect(staleComment({ reason: "duplicate", of: "KAI-9" }, "", false, "")).toMatch(/Duplicate of KAI-9[\s\S]*did not close/);
   });
 });
