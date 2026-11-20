@@ -1,8 +1,11 @@
 import type { RepoConfig, Ticket, Verdict } from "./types.js";
 
-export function prepPrompt(t: Ticket): string {
+export function prepPrompt(t: Ticket, writeDoc: boolean): string {
+  const doc = writeDoc
+    ? "Write the working doc exactly as the skill says."
+    : "This is a DRY RUN: do not write anything to Linear (no working doc, labels or comments). Print the ## Prep, ## Codebase and ## State model sections in your reply instead.";
   return `Run the factory-prep skill for Linear ticket ${t.identifier} ("${t.title}", ${t.url}).
-This is an unattended autopilot run: nobody will answer questions. Write the working doc exactly as the skill says. Do not edit code.
+This is an unattended autopilot run: nobody will answer questions. ${doc} Do not edit code.
 End your final message with one line \`VERDICT: <Ready | Split | Blocked | Needs decision>\`. If the verdict is not Ready, add one line \`REASON: <one sentence>\`.`;
 }
 
@@ -15,10 +18,10 @@ export function parseVerdict(text: string): { verdict: Verdict | null; reason: s
   return { verdict, reason };
 }
 
-export function buildPrompt(t: Ticket, cfg: RepoConfig, dir: string, branch: string): string {
+export function buildPrompt(t: Ticket, cfg: RepoConfig, dir: string, branch: string, prepNotes: string | null): string {
   const deny = cfg.autopilot.denyPaths.length ? cfg.autopilot.denyPaths.map((p) => `  - ${p}`).join("\n") : "  (none)";
   return `Implement Linear ticket ${t.identifier}: "${t.title}" (${t.url}). Follow the factory-autopilot skill.
-The ticket's working doc (## Prep, ## Codebase, ## State model) was just written by prep: read it and treat it as the plan.
+${prepNotes ? `Prep's notes (dry run; treat them as the plan, and do not write to Linear):\n${prepNotes}\n` : "The ticket's working doc (## Prep, ## Codebase, ## State model) was just written by prep: read it and treat it as the plan."}
 
 - Worktree: ${dir} (branch ${branch}). Work only here. Read AGENTS.md / CLAUDE.md first.
 - Do not commit, push, open a PR or change the branch; the runner does that after its own checks.

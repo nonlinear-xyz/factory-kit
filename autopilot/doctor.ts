@@ -1,5 +1,6 @@
 import { loadMachineConfig, loadRepoConfig } from "./config.js";
 import { exec } from "./exec.js";
+import { KEYCHAIN_SERVICE, linearToken } from "./linear.js";
 
 export interface Check {
   name: string;
@@ -8,14 +9,15 @@ export interface Check {
 }
 
 /** Everything a headless run needs on this machine and in this repo. Read-only. */
-export function doctor(repoRoot: string): Check[] {
+export function doctor(repoRoot: string, configFile?: string): Check[] {
   const checks: Check[] = [];
   const add = (name: string, ok: boolean, detail: string) => checks.push({ name, ok, detail });
 
   add("git", exec("git", ["--version"]).status === 0, "git on PATH");
   const gh = exec("gh", ["auth", "status"]);
   add("gh", gh.status === 0, gh.status === 0 ? "logged in" : "run `gh auth login`");
-  add("LINEAR_API_KEY", Boolean(process.env.LINEAR_API_KEY), process.env.LINEAR_API_KEY ? "set" : "export a Linear personal API key");
+  const source = process.env.LINEAR_API_KEY ? "LINEAR_API_KEY" : linearToken() ? `Keychain (${KEYCHAIN_SERVICE})` : null;
+  add("linear key", Boolean(source), source ?? `security add-generic-password -a "$USER" -s ${KEYCHAIN_SERVICE} -w`);
 
   const machine = loadMachineConfig();
   for (const a of machine.agents) {
@@ -27,7 +29,7 @@ export function doctor(repoRoot: string): Check[] {
   }
 
   try {
-    const cfg = loadRepoConfig(repoRoot);
+    const cfg = loadRepoConfig(repoRoot, configFile);
     add("repo config", true, `verify: ${cfg.autopilot.verifyCmd}${cfg.autopilot.canaryCmd ? ` · canary: ${cfg.autopilot.canaryCmd}` : " · no canary"}`);
   } catch (e) {
     add("repo config", false, e instanceof Error ? e.message : String(e));

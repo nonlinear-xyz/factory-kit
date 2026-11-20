@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { CLAUDE_DENIED_TOOLS, claudeArgs, parseClaudeOutput } from "../agents.js";
 import { agentEnv, parseMachineConfig, parseRepoConfig } from "../config.js";
 import { deniedFiles, globToRegExp } from "../gate.js";
-import { Linear } from "../linear.js";
+import { Linear, linearToken } from "../linear.js";
 import { parseVerdict } from "../prompts.js";
 import { assertTicketBranch } from "../worktree.js";
 
@@ -23,6 +23,11 @@ describe("config", () => {
     const base = { ANTHROPIC_API_KEY: "a", OPENAI_API_KEY: "o", PATH: "/bin" };
     expect(agentEnv(parseMachineConfig({}), base)).toEqual({ PATH: "/bin" });
     expect(agentEnv(parseMachineConfig({ allowApiBilling: true }), base)).toEqual(base);
+  });
+
+  it("never hands the runner's Linear or GitHub credentials to the agent", () => {
+    const base = { LINEAR_API_KEY: "l", GH_TOKEN: "g", GITHUB_TOKEN: "g2", PATH: "/bin" };
+    expect(agentEnv(parseMachineConfig({ allowApiBilling: true }), base)).toEqual({ PATH: "/bin" });
   });
 
   it("defaults to claude with the plain launcher and drops unknown agents", () => {
@@ -82,6 +87,10 @@ describe("branch guard", () => {
 });
 
 describe("linear", () => {
+  it("prefers LINEAR_API_KEY from the environment", () => {
+    expect(linearToken({ LINEAR_API_KEY: "env-key" })).toBe("env-key");
+  });
+
   const issue = { id: "u1", identifier: "KAI-240", title: "T", url: "https://l/KAI-240", branchName: "nishu/kai-240-t", state: { name: "Todo" }, labels: { nodes: [{ name: "autopilot" }] }, team: { states: { nodes: [{ id: "s-rev", name: "In Review" }] } } };
   const reply = (data: unknown) => ({ ok: true, status: 200, json: async () => ({ data }) }) as Response;
 

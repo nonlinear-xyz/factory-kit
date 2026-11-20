@@ -1,4 +1,16 @@
+import { exec } from "./exec.js";
 import type { Ticket } from "./types.js";
+
+/** Keychain item the runner reads when LINEAR_API_KEY isn't in the environment (macOS). */
+export const KEYCHAIN_SERVICE = "factory-kit-linear";
+
+/** Env first, then the macOS Keychain, so the key never has to be exported in every shell. */
+export function linearToken(env: NodeJS.ProcessEnv = process.env): string | null {
+  if (env.LINEAR_API_KEY) return env.LINEAR_API_KEY;
+  if (process.platform !== "darwin") return null;
+  const r = exec("security", ["find-generic-password", "-s", KEYCHAIN_SERVICE, "-w"]);
+  return r.status === 0 && r.stdout.trim() ? r.stdout.trim() : null;
+}
 
 const ENDPOINT = "https://api.linear.app/graphql";
 
@@ -8,8 +20,8 @@ export class Linear {
   constructor(private readonly token: string, private readonly fetchImpl: Fetch = fetch) {}
 
   static fromEnv(): Linear {
-    const token = process.env.LINEAR_API_KEY;
-    if (!token) throw new Error("LINEAR_API_KEY is not set. Create a personal API key in Linear → Settings → Security & access.");
+    const token = linearToken();
+    if (!token) throw new Error(`No Linear key. Store one with: security add-generic-password -a "$USER" -s ${KEYCHAIN_SERVICE} -w   (or set LINEAR_API_KEY)`);
     return new Linear(token);
   }
 

@@ -36,8 +36,9 @@ export function parseRepoConfig(repoRoot: string, raw: unknown): RepoConfig {
   };
 }
 
-export function loadRepoConfig(repoRoot: string): RepoConfig {
-  const file = [".factory-kit/linear.json", ".claude/linear.json"].map((f) => path.join(repoRoot, f)).find(existsSync);
+/** `override` points at a trial config outside the repo, for testing before the repo opts in. */
+export function loadRepoConfig(repoRoot: string, override?: string): RepoConfig {
+  const file = override ? path.resolve(override) : [".factory-kit/linear.json", ".claude/linear.json"].map((f) => path.join(repoRoot, f)).find(existsSync);
   if (!file) throw new Error(`No .factory-kit/linear.json in ${repoRoot}. Run factory-setup-linear first.`);
   return parseRepoConfig(repoRoot, JSON.parse(readFileSync(file, "utf8")));
 }
@@ -57,12 +58,17 @@ export function loadMachineConfig(): MachineConfig {
   return parseMachineConfig(existsSync(MACHINE_CONFIG) ? JSON.parse(readFileSync(MACHINE_CONFIG, "utf8")) : {});
 }
 
+/** Runner credentials. The agent never sees them: Linear and GitHub writes are the runner's job. */
+const RUNNER_SECRETS = ["LINEAR_API_KEY", "GH_TOKEN", "GITHUB_TOKEN"];
+
 /**
- * The agent's environment. Unless the machine opts in, API keys are removed so
- * the CLIs use their logged-in subscriptions instead of billing an API account.
+ * The agent's environment. Runner credentials are always removed. Unless the
+ * machine opts in, model API keys are removed too, so the CLIs use their
+ * logged-in subscriptions instead of billing an API account.
  */
 export function agentEnv(machine: MachineConfig, base: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const env = { ...base };
+  for (const k of RUNNER_SECRETS) delete env[k];
   if (!machine.allowApiBilling) {
     delete env.ANTHROPIC_API_KEY;
     delete env.ANTHROPIC_AUTH_TOKEN;

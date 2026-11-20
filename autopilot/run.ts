@@ -14,6 +14,7 @@ export interface RunOptions {
   agent: AgentName;
   /** Stop after the gate: no commit, push, PR or Linear writes by the runner. */
   dryRun: boolean;
+  configFile?: string;
   log: (line: string) => void;
 }
 
@@ -21,7 +22,7 @@ const HOUR = 60 * 60_000;
 
 export async function runTicket(o: RunOptions): Promise<RunOutcome> {
   const started = Date.now();
-  const cfg = loadRepoConfig(o.repoRoot);
+  const cfg = loadRepoConfig(o.repoRoot, o.configFile);
   const machine = loadMachineConfig();
   const linear = Linear.fromEnv();
   const ticket = await linear.ticket(o.identifier);
@@ -62,7 +63,7 @@ export async function runTicket(o: RunOptions): Promise<RunOutcome> {
 
     stage = "prep";
     o.log("prep…");
-    const prep = agent.run({ ...base, prompt: prepPrompt(ticket), maxTurns: 40 });
+    const prep = agent.run({ ...base, prompt: prepPrompt(ticket, !o.dryRun), maxTurns: 40 });
     tally(prep);
     if (prep.limited) return await bounce("prep", `${o.agent} hit a usage limit.`);
     const { verdict, reason } = parseVerdict(prep.text);
@@ -71,7 +72,7 @@ export async function runTicket(o: RunOptions): Promise<RunOutcome> {
 
     stage = "build";
     o.log("build…");
-    let build = agent.run({ ...base, prompt: buildPrompt(ticket, cfg, dir, ticket.branchName) });
+    let build = agent.run({ ...base, prompt: buildPrompt(ticket, cfg, dir, ticket.branchName, o.dryRun ? prep.text.slice(-6000) : null) });
     tally(build);
     if (build.limited) return await bounce("build", `${o.agent} hit a usage limit.`);
 
