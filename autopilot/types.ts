@@ -16,7 +16,8 @@ export type StaleClose =
 export type RunOutcome =
   | { kind: "bounced"; stage: Stage; reason: string }
   | { kind: "dry-run"; worktree: string; branch: string; changedFiles: string[] }
-  | { kind: "handed-off"; prUrl: string; branch: string }
+  /** `warning` is set when the PR is open but the Linear handoff didn't complete. */
+  | { kind: "handed-off"; prUrl: string; branch: string; warning?: string }
   /** Already on main or duplicated. `applied` is false on a dry run or with staleAction "comment". */
   | { kind: "closed"; close: StaleClose; applied: boolean };
 
@@ -30,6 +31,8 @@ export interface AgentResult {
   estimatedCostUsd: number | null;
   /** The agent stopped on a usage or rate limit, not on the task. */
   limited: boolean;
+  /** Why the agent stopped, when it didn't finish cleanly (e.g. error_max_turns). */
+  stopReason: string | null;
 }
 
 export interface GateResult {
@@ -48,10 +51,10 @@ export interface RepoAutopilotConfig {
   setup: string[];
   copyFiles: string[];
   denyPaths: string[];
-  /** Extra tools the build agent may use beyond file edits (Claude syntax). */
+  /** Extra tools the build agent may use beyond file edits (Claude syntax). Prefer exact commands over prefixes. */
   allowedTools: string[];
-  /** Tools prep (and build) need to read and write Linear, e.g. the Linear MCP server. */
-  linearTools: string[];
+  /** Env var names the agent and verify need beyond the base allowlist (never credentials). */
+  envPassthrough: string[];
   maxTurns: number;
   commitType: string;
   /** What to do when prep finds a ticket already shipped or duplicated. */
@@ -82,6 +85,9 @@ export interface Ticket {
   url: string;
   branchName: string;
   stateName: string;
+  stateType: string;
+  teamId: string;
+  createdAt: string;
   labels: string[];
   teamStates: { id: string; name: string; type: string }[];
 }

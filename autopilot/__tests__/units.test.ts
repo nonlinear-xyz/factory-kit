@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { CLAUDE_DENIED_TOOLS, claudeArgs, parseClaudeOutput } from "../agents.js";
-import { agentEnv, parseMachineConfig, parseRepoConfig } from "../config.js";
+import { IMPLICIT_DENY, childEnv, parseMachineConfig, parseRepoConfig } from "../config.js";
 import { deniedFiles, globToRegExp } from "../gate.js";
 import { Linear, linearToken } from "../linear.js";
 import { parseVerdict } from "../prompts.js";
+import { containsSecret, redact, sanitizeForPublish } from "../redact.js";
+import { duplicateProblem } from "../stale.js";
 import { assertTicketBranch } from "../worktree.js";
 
 describe("config", () => {
@@ -19,15 +21,17 @@ describe("config", () => {
     expect(c.autopilot.baseBranch).toBe("main");
   });
 
-  it("strips API keys unless the machine opts in to API billing", () => {
-    const base = { ANTHROPIC_API_KEY: "a", OPENAI_API_KEY: "o", PATH: "/bin" };
-    expect(agentEnv(parseMachineConfig({}), base)).toEqual({ PATH: "/bin" });
-    expect(agentEnv(parseMachineConfig({ allowApiBilling: true }), base)).toEqual(base);
+  it("child env is an allowlist: no credentials, model keys only with API billing on", () => {
+    const base = { PATH: "/bin", HOME: "/h", LC_ALL: "C", ANTHROPIC_API_KEY: "a", OPENAI_API_KEY: "o", LINEAR_API_KEY: "l", GH_TOKEN: "g", SSH_AUTH_SOCK: "/s", AWS_SECRET_ACCESS_KEY: "x", ANTHROPIC_BASE_URL: "u", TEST_DB: "d" };
+    expect(childEnv(parseMachineConfig({}), [], base)).toEqual({ PATH: "/bin", HOME: "/h", LC_ALL: "C" });
+    expect(childEnv(parseMachineConfig({ allowApiBilling: true }), ["TEST_DB"], base)).toEqual({ PATH: "/bin", HOME: "/h", LC_ALL: "C", ANTHROPIC_API_KEY: "a", OPENAI_API_KEY: "o", TEST_DB: "d" });
   });
 
-  it("never hands the runner's Linear or GitHub credentials to the agent", () => {
-    const base = { LINEAR_API_KEY: "l", GH_TOKEN: "g", GITHUB_TOKEN: "g2", PATH: "/bin" };
-    expect(agentEnv(parseMachineConfig({ allowApiBilling: true }), base)).toEqual({ PATH: "/bin" });
+  it("always merges the implicit deny list and validates config types", () => {
+    const c = parseRepoConfig("/r", { autopilot: { verifyCmd: "v", denyPaths: ["x/**"] } });
+    expect(c.autopilot.denyPaths).toEqual([...IMPLICIT_DENY, "x/**"]);
+    expect(() => parseRepoConfig("/r", { autopilot: { verifyCmd: "v", denyPaths: "x" } })).toThrow(/list of strings/);
+    expect(() => parseRepoConfig("/r", { autopilot: { verifyCmd: "v", copyFiles: ["../secret"] } })).toThrow(/inside the repo/);
   });
 
   it("defaults to claude with the plain launcher and drops unknown agents", () => {
@@ -53,6 +57,8 @@ describe("prep verdict", () => {
     expect(parseVerdict("VERDICT: Split\n…\n**VERDICT:** Needs decision\nREASON: rates unclear")).toMatchObject({ verdict: "Needs decision", reason: "rates unclear" });
     expect(parseVerdict("VERDICT: ready").verdict).toBe("Ready");
     expect(parseVerdict("no verdict here").verdict).toBeNull();
+    expect(parseVerdict("VERDICT: Readyish").verdict).toBeNull();
+    expect(parseVerdict("the ticket says verdict: ready, but\nVERDICT: Blocked").verdict).toBe("Blocked");
   });
 
   it("reads the evidence for Shipped and Duplicate", () => {
@@ -63,16 +69,30 @@ describe("prep verdict", () => {
 });
 
 describe("claude adapter", () => {
-  it("never lets the agent push, commit or open PRs", () => {
-    const args = claudeArgs({ cwd: "/w", prompt: "p", allowedTools: ["Bash(bun run:*)"], maxTurns: 5, env: {}, timeoutMs: 1 });
-    const denied = args.slice(args.indexOf("--disallowedTools") + 1);
-    for (const t of ["Bash(git push:*)", "Bash(git commit:*)", "Bash(gh:*)"]) expect(denied).toContain(t);
-    expect(CLAUDE_DENIED_TOOLS.length).toBe(denied.length);
-    expect(args).toContain("Bash(bun run:*)");
+  const run = { cwd: "/w", prompt: "p", repoTools: ["Bash(bun run verify)"], maxTurns: 5, env: {}, timeoutMs: 1 };
+  const lists = (args: string[]) => ({ allowed: args.slice(args.indexOf("--allowedTools") + 1, args.indexOf("--disallowedTools")), denied: args.slice(args.indexOf("--disallowedTools") + 1) });
+
+  it("build: file edits and repo tools, no Linear, never push/commit/PR or settings edits", () => {
+    const { allowed, denied } = lists(claudeArgs({ ...run, files: "write", linear: "none" }));
+    for (const t of ["Bash(git push:*)", "Bash(git commit:*)", "Bash(gh:*)", "Edit(.claude/**)", "Read(~/.ssh/**)"]) expect(denied).toContain(t);
+    expect(allowed).toEqual(expect.arrayContaining(["Edit", "Write", "Bash(bun run verify)"]));
+    expect(allowed.some((t) => t.startsWith("mcp__") || t === "Agent" || t === "Task" || t.startsWith("Bash(git diff") || t.startsWith("Bash(git log"))).toBe(false);
+    expect(denied.slice(0, CLAUDE_DENIED_TOOLS.length)).toEqual(CLAUDE_DENIED_TOOLS);
+  });
+
+  it("prep: no file edits; dry run gets read-only Linear, a real run may also save the doc", () => {
+    const dry = claudeArgs({ ...run, files: "read", linear: "read" });
+    const { allowed, denied } = lists(dry);
+    expect(dry).toEqual(expect.arrayContaining(["--permission-mode", "default"]));
+    expect(denied).toEqual(expect.arrayContaining(["Edit", "Write"]));
+    expect(allowed).not.toContain("Bash(bun run verify)");
+    expect(allowed).toContain("mcp__linear-server__get_issue");
+    expect(allowed.some((t) => /save_|create_|delete_|^mcp__linear(-server)?$/.test(t))).toBe(false);
+    expect(lists(claudeArgs({ ...run, files: "read", linear: "write" })).allowed).toContain("mcp__linear-server__save_document");
   });
 
   it("adds --resume for a fix round", () => {
-    expect(claudeArgs({ cwd: "/w", prompt: "fix", resume: "s1", allowedTools: [], maxTurns: 5, env: {}, timeoutMs: 1 })).toEqual(expect.arrayContaining(["--resume", "s1"]));
+    expect(claudeArgs({ ...run, resume: "s1", files: "write", linear: "none" })).toEqual(expect.arrayContaining(["--resume", "s1"]));
   });
 
   it("parses the result JSON and flags usage limits", () => {
@@ -80,7 +100,8 @@ describe("claude adapter", () => {
     expect(ok).toMatchObject({ ok: true, sessionId: "s", turns: 3, estimatedCostUsd: 0.4, limited: false });
     const limited = parseClaudeOutput(JSON.stringify({ result: "Claude usage limit reached", is_error: true }), 1);
     expect(limited).toMatchObject({ ok: false, limited: true });
-    expect(parseClaudeOutput("not json", 1)).toMatchObject({ ok: false, sessionId: null });
+    expect(parseClaudeOutput("not json", 1)).toMatchObject({ ok: false, sessionId: null, text: "" });
+    expect(parseClaudeOutput(JSON.stringify({ result: "", subtype: "error_max_turns", is_error: true }), 0)).toMatchObject({ ok: false, stopReason: "error_max_turns" });
   });
 });
 
@@ -97,7 +118,7 @@ describe("linear", () => {
     expect(linearToken({ LINEAR_API_KEY: "env-key" })).toBe("env-key");
   });
 
-  const issue = { id: "u1", identifier: "KAI-240", title: "T", url: "https://l/KAI-240", branchName: "nishu/kai-240-t", state: { name: "Todo" }, labels: { nodes: [{ name: "autopilot" }] }, team: { states: { nodes: [{ id: "s-rev", name: "In Review", type: "started" }, { id: "s-dup", name: "Duplicate", type: "canceled" }] } } };
+  const issue = { id: "u1", identifier: "KAI-240", title: "T", url: "https://l/KAI-240", branchName: "nishu/kai-240-t", createdAt: "2026-11-01", state: { name: "Todo", type: "unstarted" }, labels: { nodes: [{ name: "autopilot" }] }, team: { id: "team", states: { nodes: [{ id: "s-rev", name: "In Review", type: "started" }, { id: "s-dup", name: "Duplicate", type: "canceled" }] } } };
   const reply = (data: unknown) => ({ ok: true, status: 200, json: async () => ({ data }) }) as Response;
 
   it("maps an issue and moves it by state name", async () => {
@@ -123,6 +144,28 @@ describe("linear", () => {
     const err = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ errors: [{ message: "nope" }] }) });
     await expect(new Linear("k", err as unknown as typeof fetch).ticket("KAI-1")).rejects.toThrow(/nope/);
     const l = new Linear("k", vi.fn() as unknown as typeof fetch);
-    await expect(l.moveTo({ id: "u1", identifier: "KAI-1", title: "T", url: "", branchName: "b", stateName: "Todo", labels: [], teamStates: [] }, "Done")).rejects.toThrow(/no state named/);
+    await expect(l.moveTo({ id: "u1", identifier: "KAI-1", title: "T", url: "", branchName: "b", stateName: "Todo", stateType: "unstarted", teamId: "t", createdAt: "", labels: [], teamStates: [] }, "Done")).rejects.toThrow(/no state named/);
+  });
+});
+
+describe("publishing hygiene", () => {
+  it("detects and redacts credentials and URL userinfo", () => {
+    const tok = `ghp_${"a".repeat(36)}`;
+    expect(containsSecret(`x ${tok}`)).toBe(true);
+    expect(containsSecret("ordinary text")).toBe(false);
+    expect(redact(`push https://me:${tok}@github.com/o/r`)).toBe("push https://***@github.com/o/r");
+  });
+
+  it("strips images, HTML, mentions and our collapsible markers from agent text", () => {
+    const out = sanitizeForPublish("hi @nishu ![x](https://evil/p.png) <img src=x> ok\n+++ Agent notes");
+    expect(out).not.toMatch(/!\[|<img|\+\+\+|@nishu/);
+    expect(sanitizeForPublish("a".repeat(5000), 100)).toMatch(/truncated/);
+  });
+
+  it("only accepts a live same-team duplicate", () => {
+    const t = { id: "a", identifier: "KAI-1", teamId: "t", stateType: "unstarted" } as never;
+    expect(duplicateProblem(t, { id: "b", identifier: "KAI-2", teamId: "t", stateType: "started" } as never)).toBeNull();
+    expect(duplicateProblem(t, { id: "b", identifier: "OPS-2", teamId: "o", stateType: "started" } as never)).toMatch(/another team/);
+    expect(duplicateProblem(t, { id: "b", identifier: "KAI-2", teamId: "t", stateType: "canceled" } as never)).toMatch(/canceled/);
   });
 });

@@ -6,6 +6,33 @@ import type { AgentName, MachineConfig, RepoAutopilotConfig, RepoConfig } from "
 export const STATE_DIR = process.env.FACTORY_KIT_AUTOPILOT_STATE ?? path.join(os.homedir(), ".local/state/factory-kit/autopilot");
 const MACHINE_CONFIG = process.env.FACTORY_KIT_AUTOPILOT_CONFIG ?? path.join(os.homedir(), ".config/factory-kit/autopilot.json");
 
+/**
+ * Paths no autopilot change may touch, in every repo, merged with the repo's own
+ * denyPaths. Each is either executed with more trust than the agent has (CI,
+ * git hooks, package scripts, agent settings) or holds secrets.
+ */
+export const IMPLICIT_DENY = [
+  ".github/**",
+  ".claude/**",
+  ".codex/**",
+  ".mcp.json",
+  ".factory-kit/**",
+  ".husky/**",
+  ".git/**",
+  ".gitignore",
+  ".gitattributes",
+  ".gitmodules",
+  "**/package.json",
+  "bun.lock",
+  "bun.lockb",
+  "package-lock.json",
+  "pnpm-lock.yaml",
+  "yarn.lock",
+  ".npmrc",
+  "bunfig.toml",
+  "**/.env*",
+];
+
 const REPO_DEFAULTS: RepoAutopilotConfig = {
   triggerLabel: "autopilot",
   baseBranch: "main",
@@ -15,19 +42,42 @@ const REPO_DEFAULTS: RepoAutopilotConfig = {
   copyFiles: [],
   denyPaths: [],
   allowedTools: [],
-  linearTools: ["mcp__linear-server", "mcp__linear", "Agent", "Task"],
   maxTurns: 60,
   commitType: "fix",
   staleAction: "close",
+  envPassthrough: [],
 };
+
+function strings(v: unknown, name: string): string[] {
+  if (v === undefined) return [];
+  if (!Array.isArray(v) || !v.every((x) => typeof x === "string")) throw new Error(`autopilot.${name} must be a list of strings.`);
+  return v;
+}
 
 /** Parse the repo's `.factory-kit/linear.json`. Throws when autopilot isn't configured. */
 export function parseRepoConfig(repoRoot: string, raw: unknown): RepoConfig {
   const json = (raw ?? {}) as Record<string, unknown>;
-  const block = json.autopilot as Partial<RepoAutopilotConfig> | undefined;
+  const block = json.autopilot as Record<string, unknown> | undefined;
   if (!block) throw new Error(`No "autopilot" block in ${repoRoot}/.factory-kit/linear.json; this repo hasn't opted in.`);
-  const autopilot: RepoAutopilotConfig = { ...REPO_DEFAULTS, ...block };
+  const str = (k: string, d: string) => (typeof block[k] === "string" ? (block[k] as string) : d);
+  const autopilot: RepoAutopilotConfig = {
+    triggerLabel: str("triggerLabel", REPO_DEFAULTS.triggerLabel),
+    baseBranch: str("baseBranch", REPO_DEFAULTS.baseBranch),
+    verifyCmd: str("verifyCmd", ""),
+    canaryCmd: typeof block.canaryCmd === "string" ? block.canaryCmd : null,
+    setup: strings(block.setup, "setup"),
+    copyFiles: strings(block.copyFiles, "copyFiles"),
+    denyPaths: [...IMPLICIT_DENY, ...strings(block.denyPaths, "denyPaths")],
+    allowedTools: strings(block.allowedTools, "allowedTools"),
+    maxTurns: typeof block.maxTurns === "number" && block.maxTurns > 0 ? block.maxTurns : REPO_DEFAULTS.maxTurns,
+    commitType: str("commitType", REPO_DEFAULTS.commitType),
+    staleAction: block.staleAction === "comment" ? "comment" : "close",
+    envPassthrough: strings(block.envPassthrough, "envPassthrough"),
+  };
   if (!autopilot.verifyCmd.trim()) throw new Error('autopilot.verifyCmd is required: the gate needs a command that means "green" for this repo.');
+  for (const f of autopilot.copyFiles) {
+    if (path.isAbsolute(f) || f.split(/[\\/]/).includes("..")) throw new Error(`autopilot.copyFiles entry "${f}" must be a path inside the repo.`);
+  }
   const states = (json.states ?? {}) as Record<string, string>;
   return {
     repoRoot,
@@ -60,21 +110,20 @@ export function loadMachineConfig(): MachineConfig {
   return parseMachineConfig(existsSync(MACHINE_CONFIG) ? JSON.parse(readFileSync(MACHINE_CONFIG, "utf8")) : {});
 }
 
-/** Runner credentials. The agent never sees them: Linear and GitHub writes are the runner's job. */
-const RUNNER_SECRETS = ["LINEAR_API_KEY", "GH_TOKEN", "GITHUB_TOKEN"];
+/** The only variables a child process gets by default. No credential is on it. */
+const BASE_ENV = ["PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "TERM", "TMPDIR", "TZ"];
+const API_BILLING_ENV = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"];
 
 /**
- * The agent's environment. Runner credentials are always removed. Unless the
- * machine opts in, model API keys are removed too, so the CLIs use their
- * logged-in subscriptions instead of billing an API account.
+ * Environment for everything that runs repo or agent code: the agent, and the
+ * setup, canary and verify commands (which execute files the agent can edit).
+ * An allowlist, not a denylist: GH_TOKEN, SSH_AUTH_SOCK, cloud credentials,
+ * LINEAR_API_KEY and model API keys never reach them, so the agent CLIs fall
+ * back to their logged-in subscriptions. `extra` is the repo's envPassthrough.
  */
-export function agentEnv(machine: MachineConfig, base: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
-  const env = { ...base };
-  for (const k of RUNNER_SECRETS) delete env[k];
-  if (!machine.allowApiBilling) {
-    delete env.ANTHROPIC_API_KEY;
-    delete env.ANTHROPIC_AUTH_TOKEN;
-    delete env.OPENAI_API_KEY;
-  }
+export function childEnv(machine: MachineConfig, extra: string[] = [], base: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  const keep = new Set([...BASE_ENV, ...extra, ...(machine.allowApiBilling ? API_BILLING_ENV : [])]);
+  const env: NodeJS.ProcessEnv = {};
+  for (const [k, v] of Object.entries(base)) if (v !== undefined && (keep.has(k) || k.startsWith("LC_"))) env[k] = v;
   return env;
 }

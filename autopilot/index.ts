@@ -73,6 +73,10 @@ export async function main(args: string[]): Promise<number> {
     switch (outcome.kind) {
       case "handed-off":
         console.log(`[autopilot] draft PR ${outcome.prUrl}`);
+        if (outcome.warning) {
+          console.log(`[autopilot] warning: ${outcome.warning}`);
+          return 3;
+        }
         return 0;
       case "dry-run":
         console.log(`[autopilot] dry run green · ${outcome.changedFiles.length} files in ${outcome.worktree}`);

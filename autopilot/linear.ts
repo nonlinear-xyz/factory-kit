@@ -41,10 +41,10 @@ export class Linear {
   async ticket(identifier: string): Promise<Ticket> {
     const data = await this.query<{ issue: RawIssue | null }>(
       `query Ticket($id: String!) { issue(id: $id) {
-        id identifier title url branchName
-        state { name }
+        id identifier title url branchName createdAt
+        state { name type }
         labels { nodes { name } }
-        team { states { nodes { id name type } } }
+        team { id states { nodes { id name type } } }
       } }`,
       { id: identifier },
     );
@@ -57,6 +57,9 @@ export class Linear {
       url: i.url,
       branchName: i.branchName,
       stateName: i.state.name,
+      stateType: i.state.type,
+      teamId: i.team.id,
+      createdAt: i.createdAt,
       labels: i.labels.nodes.map((l) => l.name),
       teamStates: i.team.states.nodes,
     };
@@ -86,7 +89,8 @@ interface RawIssue {
   title: string;
   url: string;
   branchName: string;
-  state: { name: string };
+  createdAt: string;
+  state: { name: string; type: string };
   labels: { nodes: { name: string }[] };
-  team: { states: { nodes: { id: string; name: string; type: string }[] } };
+  team: { id: string; states: { nodes: { id: string; name: string; type: string }[] } };
 }

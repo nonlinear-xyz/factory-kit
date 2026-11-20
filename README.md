@@ -122,7 +122,7 @@ factory-kit/
 └── templates/factory-conformance.yml
 ```
 
-There are 46 canonical skills:
+There are 47 canonical skills:
 
 - 23 principle-first knowledge skills: voice, mentor, stack, frontend, state modeling, design, animation, auth, data layer, database migration, forms, API, data pipelines, testing, LLM workflows, prompting, security, observability, deployment, CI, commits, pitfalls, and verification.
 - 11 portable command workflows: standup, prep, entry, log, submit, close, release, setup-linear, prompt, kit-audit, and learn.
@@ -173,6 +173,7 @@ The canonical folder name and the `name` in each skill's YAML frontmatter are th
 | `factory-setup-linear` | `/setup-linear` | Configure portable Linear settings with legacy migration support |
 | `factory-standup` | `/standup` | Group open Linear work into in-flight, priority, and backlog views |
 | `factory-submit` | `/submit` | Move the branch-associated Linear issue to In Review |
+| `factory-autopilot` | `fk autopilot run` | The contract for unattended runs: the agent edits and verifies in its worktree; the runner gates, publishes a draft PR and hands off in Linear |
 
 ### Portable specialist-workflow skills
 
