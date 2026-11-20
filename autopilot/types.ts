@@ -4,7 +4,7 @@
 
 export type AgentName = "claude" | "codex";
 
-export type Stage = "config" | "worktree" | "canary" | "prep" | "build" | "gate" | "handoff";
+export type Stage = "config" | "worktree" | "canary" | "prep" | "build" | "gate" | "review" | "handoff";
 
 export type Verdict = "Ready" | "Split" | "Blocked" | "Needs decision" | "Shipped" | "Duplicate";
 

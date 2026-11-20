@@ -4,20 +4,24 @@ import { exec } from "./exec.js";
 import { doctor } from "./doctor.js";
 import { loadMachineConfig, loadRepoConfig } from "./config.js";
 import { Linear } from "./linear.js";
-import { runTicket } from "./run.js";
+import { publishTicket, runTicket } from "./run.js";
 import { worktreePath } from "./worktree.js";
 import type { AgentName } from "./types.js";
 
 const USAGE = `factory-kit autopilot
 
   factory-kit autopilot run <ISSUE-ID> [--agent claude] [--repo <path>] [--config <file>] [--dry-run]
+  factory-kit autopilot publish <ISSUE-ID> [--agent claude] [--repo <path>] [--config <file>]
   factory-kit autopilot show <ISSUE-ID> [--repo <path>] [--config <file>]
   factory-kit autopilot doctor [--repo <path>] [--config <file>]
 
 --config  use this linear.json instead of the repo's (try autopilot before the repo opts in)
 
-run       prep → build → gate → draft PR + Linear handoff, in the ticket's worktree.
-          --dry-run stops after the gate: no commit, push, PR or runner Linear writes.
+run       prep → build → gate → independent review → draft PR + Linear handoff,
+          in the ticket's worktree. --dry-run stops before publishing: nothing is
+          written to GitHub or Linear.
+publish   publish what a green dry run left in the worktree, without building again
+          (the gate and the review run again first).
 show      read-only: what a run on this ticket would do. Writes nothing anywhere.
 doctor    check git, gh, Linear key, agent CLIs and the repo's autopilot config.`;
 
@@ -64,12 +68,13 @@ export async function main(args: string[]): Promise<number> {
     ].join("\n"));
     return 0;
   }
-  if (cmd === "run") {
+  if (cmd === "run" || cmd === "publish") {
     const id = rest.find((a) => /^[A-Z][A-Z0-9]*-\d+$/i.test(a));
     if (!id) throw new Error("Pass a Linear issue ID, e.g. factory-kit autopilot run KAI-240.");
     const agent = (opt(rest, "agent") ?? "claude") as AgentName;
     if (agent !== "claude" && agent !== "codex") throw new Error(`Unknown agent "${agent}".`);
-    const outcome = await runTicket({ identifier: id.toUpperCase(), repoRoot: repoRoot(rest), agent, dryRun: rest.includes("--dry-run"), configFile: opt(rest, "config"), log: (l) => console.log(`[autopilot] ${l}`) });
+    const common = { identifier: id.toUpperCase(), repoRoot: repoRoot(rest), agent, configFile: opt(rest, "config"), log: (l: string) => console.log(`[autopilot] ${l}`) };
+    const outcome = cmd === "publish" ? await publishTicket(common) : await runTicket({ ...common, dryRun: rest.includes("--dry-run") });
     switch (outcome.kind) {
       case "handed-off":
         console.log(`[autopilot] draft PR ${outcome.prUrl}`);

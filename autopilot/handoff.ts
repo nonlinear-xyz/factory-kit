@@ -13,6 +13,8 @@ export interface HandoffInput {
   changedFiles: string[];
   /** HEAD before the agent ran; nothing but the runner's own commit may sit on top of it. */
   startSha: string;
+  /** The independent reviewer's non-blocking notes, shown to the human reviewer. */
+  reviewNotes: string[];
 }
 
 /** A publish that failed part-way, with the exact state it left behind. */
@@ -63,12 +65,16 @@ export function publish(h: HandoffInput): string {
   return pr.stdout.trim().split("\n").at(-1) ?? "";
 }
 
+function notesBlock(h: HandoffInput): string {
+  return h.reviewNotes.length ? `\n\n**Autopilot review notes (non-blocking)**\n${h.reviewNotes.map((n) => `- ${sanitizeForPublish(n, 300)}`).join("\n")}` : "";
+}
+
 export function prBody(h: HandoffInput): string {
-  return `${sanitizeForPublish(h.summary)}
+  return `${sanitizeForPublish(h.summary)}${notesBlock(h)}
 
 ---
 Linear: ${h.ticket.url}
-Autopilot · agent: ${h.agent} · gate: \`${h.cfg.autopilot.verifyCmd}\` passed
+Autopilot · agent: ${h.agent} · gate: \`${h.cfg.autopilot.verifyCmd}\` passed · independent review: approved
 Draft until a human reviews it. Autopilot never merges.`;
 }
 
@@ -78,11 +84,11 @@ export function handoffComment(h: HandoffInput, prUrl: string, resumed: boolean)
 **Status:** draft PR open; the runner's gate passed${resumed ? " after one fix round" : ""}.
 **PR:** ${prUrl}
 **Agent:** ${h.agent} (autopilot)
-**Checks:** \`${h.cfg.autopilot.verifyCmd}\` passed in the worktree.
+**Checks:** \`${h.cfg.autopilot.verifyCmd}\` passed in the worktree; an independent review approved it.
 **Next:** review the PR, mark it ready (CI and e2e run), merge, then close.
 
 **Summary**
-${sanitizeForPublish(h.summary, 1500)}
+${sanitizeForPublish(h.summary, 1500)}${notesBlock(h)}
 
 +++ Agent notes
 

@@ -186,7 +186,7 @@ describe("publish", () => {
     const { dir, baseline } = start(cfg, "KAI-19");
     writeFileSync(path.join(dir, "a.ts"), "x\n");
     must("git", ["-C", dir, "remote", "set-url", "origin", "/nonexistent/origin.git"]);
-    const h = { cfg, ticket, dir, branch: ticket.branchName, agent: "claude" as const, summary: "did it", changedFiles: ["a.ts"], startSha: baseline.head };
+    const h = { cfg, ticket, dir, branch: ticket.branchName, agent: "claude" as const, summary: "did it", changedFiles: ["a.ts"], startSha: baseline.head, reviewNotes: [] };
     expect(() => publish(h)).toThrow(PublishError);
     expect(head(dir)).toBe(baseline.head);
     expect(changedFiles(dir)).toEqual(["a.ts"]);
@@ -196,7 +196,7 @@ describe("publish", () => {
     const cfg = fixture({ copyFiles: [] });
     const { dir, baseline } = start(cfg, "KAI-20");
     writeFileSync(path.join(dir, "a.ts"), `const k = "ghp_${"a".repeat(36)}";\n`);
-    const h = { cfg, ticket: { ...ticket, identifier: "KAI-20", branchName: "nishu/kai-20-x" }, dir, branch: "nishu/kai-20-x", agent: "claude" as const, summary: "ok", changedFiles: ["a.ts"], startSha: baseline.head };
+    const h = { cfg, ticket: { ...ticket, identifier: "KAI-20", branchName: "nishu/kai-20-x" }, dir, branch: "nishu/kai-20-x", agent: "claude" as const, summary: "ok", changedFiles: ["a.ts"], startSha: baseline.head, reviewNotes: [] };
     expect(() => publish(h)).toThrow(/credential/);
     expect(head(dir)).toBe(baseline.head);
   });

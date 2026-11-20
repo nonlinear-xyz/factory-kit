@@ -6,6 +6,7 @@ import { Linear, linearToken } from "../linear.js";
 import { parseVerdict } from "../prompts.js";
 import { containsSecret, redact, sanitizeForPublish } from "../redact.js";
 import { duplicateProblem } from "../stale.js";
+import { parseReview } from "../review.js";
 import { assertTicketBranch } from "../worktree.js";
 
 describe("config", () => {
@@ -167,5 +168,20 @@ describe("publishing hygiene", () => {
     expect(duplicateProblem(t, { id: "b", identifier: "KAI-2", teamId: "t", stateType: "started" } as never)).toBeNull();
     expect(duplicateProblem(t, { id: "b", identifier: "OPS-2", teamId: "o", stateType: "started" } as never)).toMatch(/another team/);
     expect(duplicateProblem(t, { id: "b", identifier: "KAI-2", teamId: "t", stateType: "canceled" } as never)).toMatch(/canceled/);
+  });
+});
+
+describe("independent review", () => {
+  it("parses approve with notes and a summary", () => {
+    const r = parseReview("REVIEW: approve\nBLOCKING:\n- none\nNOTES:\n- api.ts:3 name it failedKinds\nSUMMARY:\nReturns which lookups failed.\nShows a notice.");
+    expect(r).toEqual({ verdict: "approve", blocking: [], notes: ["api.ts:3 name it failedKinds"], summary: "Returns which lookups failed.\nShows a notice." });
+  });
+
+  it("treats an 'approve' that lists blocking findings as changes", () => {
+    expect(parseReview("**REVIEW:** approve\nBLOCKING:\n- a.ts:1 test asserts nothing\nNOTES:\n- none\nSUMMARY:\nx").verdict).toBe("changes");
+  });
+
+  it("returns no verdict for an unparseable reply", () => {
+    expect(parseReview("looks good to me").verdict).toBeNull();
   });
 });

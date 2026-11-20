@@ -14,9 +14,12 @@ You were started by `factory-kit autopilot run`, not by a person. Nobody will an
 | Read the ticket, working doc, AGENTS.md / CLAUDE.md | Created the worktree and branch (`--no-track`) |
 | Edit files in the assigned worktree only | Runs the repo's canary before you start |
 | Run the repo's verify command and fix what it reports | Runs the gate after you stop: verify, plus a diff check against `denyPaths` |
-| Write a 3–8 line PR description as your final message | Commits, pushes, opens a **draft** PR, posts the Linear Handoff, moves the ticket to In Review |
+| Write a 3–8 line PR description as your final message | Has a separate agent session review the diff; it must approve before anything is published |
+| | Commits, pushes, opens a **draft** PR, posts the Linear Handoff, moves the ticket to In Review |
 
-The gate is the only pass/fail. Saying "done" counts for nothing until it is green. If the gate fails, the runner resumes your session once with the failures. A second failure bounces the ticket to the operator.
+The gate and the review decide. Saying "done" counts for nothing until both pass. If the gate fails, or the reviewer blocks the change, the runner resumes your session once with the failures or findings. A second failure bounces the ticket to the operator.
+
+If you are the reviewer: you did not write this change and should not assume its intent was right. Block on wrong behaviour, missed requirements, security or data problems, tests that don't test, and scope beyond the ticket. Everything else is a note.
 
 ## Rules
 
