@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { exec, must } from "./exec.js";
 import { containsSecret, redact, sanitizeForPublish } from "./redact.js";
 import type { AgentName, RepoConfig, Ticket } from "./types.js";
@@ -27,6 +29,7 @@ export class PublishError extends Error {
 // Git hooks live in the worktree, where the agent could have written them.
 // The runner's own git calls never run them.
 const NO_HOOKS = ["-c", "core.hooksPath=/dev/null"];
+const LITERAL = { ...process.env, GIT_LITERAL_PATHSPECS: "1" };
 
 /** Refuse to publish text that looks like it carries a credential. */
 export function assertPublishable(h: HandoffInput): void {
@@ -46,7 +49,11 @@ export function publish(h: HandoffInput): string {
   if (must("git", ["-C", h.dir, "rev-parse", "HEAD"]) !== h.startSha) throw new PublishError("HEAD moved since the gate ran. Nothing was published.", false);
   const undo = () => exec("git", ["-C", h.dir, "reset", "-q", "--mixed", h.startSha]);
   try {
-    must("git", ["-C", h.dir, "add", "-A", "--", ...h.changedFiles]);
+    // Paths are literal (Next.js routes like [id] are not globs). A path absent from both
+    // the worktree and the index is an already-staged deletion: passing it to add would fail.
+    const indexed = new Set(must("git", ["-C", h.dir, "ls-files", "-z", "--", ...h.changedFiles], { env: LITERAL }).split("\0").filter(Boolean));
+    const toAdd = h.changedFiles.filter((f) => indexed.has(f) || existsSync(path.join(h.dir, f)));
+    if (toAdd.length) must("git", ["-C", h.dir, "add", "-A", "--", ...toAdd], { env: LITERAL });
     const staged = must("git", ["-C", h.dir, "diff", "--cached", "--name-only", "-z"]).split("\0").filter(Boolean);
     const unexpected = staged.filter((f) => !h.changedFiles.includes(f));
     if (unexpected.length) throw new PublishError(`Refusing to commit files the gate didn't check: ${unexpected.join(", ")}`, false);

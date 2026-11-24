@@ -169,6 +169,13 @@ describe("gate", () => {
     expect(gate(cfg, b.dir, b.baseline, ENV)).toMatchObject({ ok: false, failures: expect.stringContaining("settings") });
   });
 
+  it("re-checks agent settings after verify, which runs agent-editable code", () => {
+    const cfg = fixture({ copyFiles: [], verifyCmd: "mkdir -p .claude && echo '{}' > .claude/settings.local.json" });
+    const { dir, baseline } = start(cfg, "KAI-21");
+    writeFileSync(path.join(dir, "ok.ts"), "x\n");
+    expect(gate(cfg, dir, baseline, ENV)).toMatchObject({ ok: false, failures: expect.stringContaining("verify command changed agent or tool settings") });
+  });
+
   it("runs verify with only the env it is given", () => {
     const cfg = fixture({ copyFiles: [], verifyCmd: 'test -z "$GH_TOKEN"' });
     const { dir, baseline } = start(cfg, "KAI-18");
@@ -190,6 +197,33 @@ describe("publish", () => {
     expect(() => publish(h)).toThrow(PublishError);
     expect(head(dir)).toBe(baseline.head);
     expect(changedFiles(dir)).toEqual(["a.ts"]);
+  });
+
+  it("commits staged deletions and renames, and treats bracketed paths literally", () => {
+    const cfg = fixture({ copyFiles: [] });
+    const repo = cfg.repoRoot;
+    for (const f of ["gone.ts", "old.ts", "keep.ts"]) writeFileSync(path.join(repo, f), `${f}\n`);
+    mkdirSync(path.join(repo, "app/[id]"), { recursive: true });
+    writeFileSync(path.join(repo, "app/[id]/page.tsx"), "a\n");
+    writeFileSync(path.join(repo, "app/i"), "not me\n");
+    must("git", ["-C", repo, "add", "-A"]);
+    must("git", ["-C", repo, ...GIT_ID, "commit", "-q", "-m", "files"]);
+    must("git", ["-C", repo, "push", "-q", "origin", "HEAD:main"]);
+    const t = { ...ticket, identifier: "KAI-22", branchName: "nishu/kai-22-x" };
+    const { dir, baseline } = start(cfg, "KAI-22");
+    must("git", ["-C", dir, "rm", "-q", "gone.ts"]);
+    must("git", ["-C", dir, "mv", "old.ts", "new.ts"]);
+    writeFileSync(path.join(dir, "app/[id]/page.tsx"), "b\n");
+    const files = changedFiles(dir);
+    expect(files).toEqual(expect.arrayContaining(["gone.ts", "old.ts", "new.ts", "app/[id]/page.tsx"]));
+    const h = { cfg, ticket: t, dir, branch: t.branchName, agent: "claude" as const, summary: "ok", changedFiles: files, startSha: baseline.head, reviewNotes: [] };
+    // No GitHub remote here, so opening the PR fails after the push.
+    expect(() => publish(h)).toThrow(expect.objectContaining({ pushed: true }));
+    const committed = must("git", ["-C", dir, "show", "--name-status", "--format=", "HEAD"]);
+    expect(committed).toMatch(/^D\tgone\.ts$/m);
+    expect(committed).toMatch(/^R\d*\told\.ts\tnew\.ts$/m);
+    expect(committed).toMatch(/^M\tapp\/\[id\]\/page\.tsx$/m);
+    expect(committed).not.toMatch(/app\/i$/m);
   });
 
   it("refuses a credential in the diff or the summary", () => {

@@ -3,7 +3,7 @@ import { CLAUDE_DENIED_TOOLS, claudeArgs, parseClaudeOutput } from "../agents.js
 import { IMPLICIT_DENY, childEnv, parseMachineConfig, parseRepoConfig } from "../config.js";
 import { deniedFiles, globToRegExp } from "../gate.js";
 import { Linear, linearToken } from "../linear.js";
-import { parseVerdict } from "../prompts.js";
+import { parseVerdict, prepPrompt } from "../prompts.js";
 import { containsSecret, redact, sanitizeForPublish } from "../redact.js";
 import { duplicateProblem } from "../stale.js";
 import { parseReview } from "../review.js";
@@ -54,6 +54,11 @@ describe("denyPaths", () => {
 });
 
 describe("prep verdict", () => {
+  it("asks prep to print its plan in the reply on real runs too: the builder only sees the reply", () => {
+    const t = { identifier: "KAI-1", url: "u" } as Parameters<typeof prepPrompt>[0];
+    for (const write of [true, false]) expect(prepPrompt(t, write)).toMatch(/## Prep, ## Codebase and ## State model sections in your reply/);
+  });
+
   it("takes the last VERDICT line and its reason", () => {
     expect(parseVerdict("VERDICT: Split\n…\n**VERDICT:** Needs decision\nREASON: rates unclear")).toMatchObject({ verdict: "Needs decision", reason: "rates unclear" });
     expect(parseVerdict("VERDICT: ready").verdict).toBe("Ready");

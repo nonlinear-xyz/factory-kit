@@ -213,6 +213,7 @@ async function gateReviewPublish(run: Run, baseline: Baseline, plan: string, ini
     if (fix(reviewFixPrompt(verdict, cfg.autopilot.verifyCmd)).limited) return await run.bounce("review", `${o.agent} hit a usage limit.`);
     result = gate(cfg, dir, baseline, run.env);
     if (!result.ok) return await run.bounce("gate", `After the review fix: ${result.failures}`);
+    if (!build.ok) return await run.bounce("review", `${stopped(build, "review fix")} The gate passed, but an unfinished session isn't published.`);
     ({ res, review: verdict } = review());
   }
   if (!res.ok || verdict.verdict === null) return await run.bounce("review", `The reviewer didn't return a verdict (${res.stopReason ?? "unparseable reply"}).`);

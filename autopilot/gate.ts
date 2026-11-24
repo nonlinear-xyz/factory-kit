@@ -110,6 +110,8 @@ export function gate(cfg: RepoConfig, dir: string, baseline: Baseline, env: Node
   const r = shell(cfg.autopilot.verifyCmd, { cwd: dir, env, timeoutMs: 30 * 60_000 });
   if (r.status !== 0) return fail(tail(`${r.stdout}\n${r.stderr}`), files);
   if (head(dir) !== baseline.head) return fail("Verify created commits. Nothing was published.", files);
+  // Verify runs agent-editable code, so it could rewrite ignored agent settings too.
+  if (settingsFingerprint(dir) !== baseline.settings) return fail("The verify command changed agent or tool settings (.claude, .codex, .mcp.json). Nothing was published.", files);
   const after = changedFiles(dir);
   if (!after.length) return fail("No changes left after verify.");
   const deniedAfter = deniedFiles(after, cfg.autopilot.denyPaths);
