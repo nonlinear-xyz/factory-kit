@@ -207,7 +207,7 @@ describe("factory-kit installer", () => {
       "cache",
       "factory-kit",
       "factory-kit",
-      "0.4.0",
+      "0.5.0",
       ".codex-plugin",
       "plugin.json",
     );

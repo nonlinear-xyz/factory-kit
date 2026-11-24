@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const SKILLS = path.join(ROOT, "skills");
-const VERSION = "0.4.0";
+const VERSION = "0.5.0";
 
 function frontmatter(content: string) {
   const match = content.match(/^---\n([\s\S]*?)\n---\n/);
