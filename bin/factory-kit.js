@@ -447,9 +447,23 @@ function help() {
   factory-kit guidance add|remove --target claude|codex|all
   factory-kit doctor --target claude|codex|all
   factory-kit add-ci [target-repo]
+  factory-kit autopilot run <ISSUE-ID> [--dry-run] | doctor
 
 Running factory-kit without arguments keeps the legacy Claude-only bootstrap target.
 `);
+}
+
+// Autopilot is TypeScript built into dist/ (like factory-kit-check); async, so
+// it sets the exit code itself instead of returning to main's try/catch.
+function autopilot(args) {
+  import(path.join(KIT_ROOT, "dist", "autopilot.js"))
+    .then(({ main: run }) => run(args))
+    .then((code) => { process.exitCode = code; })
+    .catch((error) => {
+      const missing = error?.code === "ERR_MODULE_NOT_FOUND";
+      console.error(missing ? "factory-kit autopilot: build artifacts missing. Run `npm run build` in the kit first." : `factory-kit autopilot failed: ${error.message ?? error}`);
+      process.exitCode = 1;
+    });
 }
 
 function main(argv = process.argv.slice(2)) {
@@ -459,6 +473,7 @@ function main(argv = process.argv.slice(2)) {
   if (command === "guidance") return runGuidance(args);
   if (command === "doctor") return doctor(args);
   if (command === "add-ci") return addCi(args[0]);
+  if (command === "autopilot") return autopilot(args);
   if (command === "--help" || command === "-h" || command === "help") return help();
   if (command.startsWith("--")) return install(argv);
   throw new Error(`Unknown command "${command}". Run factory-kit --help.`);

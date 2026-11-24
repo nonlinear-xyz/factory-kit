@@ -13,6 +13,6 @@
     "verbatimModuleSyntax": true,
     "noEmit": true
   },
-  "include": ["check", "test"],
+  "include": ["check", "autopilot", "test"],
   "exclude": ["check/**/__tests__/fixtures/**"]
 }

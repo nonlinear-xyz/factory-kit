@@ -8,6 +8,7 @@
   "type": "module",
   "bin": {
     "factory-kit": "bin/factory-kit.js",
+    "fk": "bin/factory-kit.js",
     "factory-kit-check": "bin/factory-kit-check.js"
   },
   "files": [

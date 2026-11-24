@@ -1,9 +1,9 @@
 import { defineConfig } from "tsup";
 
-// Builds the factory-kit-check engine. The bin shim (bin/factory-kit-check.js)
-// imports the compiled runner from dist/. Source of truth is check/.
+// Builds the factory-kit-check engine (check/ → dist/index.js) and autopilot
+// (autopilot/ → dist/autopilot.js). The bin shims import from dist/.
 export default defineConfig({
-  entry: ["check/index.ts"],
+  entry: { index: "check/index.ts", autopilot: "autopilot/index.ts" },
   format: ["esm"],
   outDir: "dist",
   target: "node18",

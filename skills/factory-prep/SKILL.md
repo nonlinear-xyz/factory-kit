@@ -40,6 +40,10 @@ Linear doesn't notify the agent when an operator drags a ticket to Todo. Until a
    - **Split**: the work spans more than one reviewable change. Propose sub-issues, one line each, titled per `factory-voice.md`.
    - **Blocked**: it depends on work that isn't done. Name the issues, or the missing thing if no issue exists yet.
    - **Needs decision**: a `✗` or `?` changes the scope or the contract, and only the operator can call it.
+   - **Shipped**: the outcome the ticket asks for is already on the default branch. Cite the commit that shipped it (short SHA, plus the PR if known) and the `file:line` that proves it. Partially shipped is not Shipped: that's Needs decision (close, or rescope to the remainder).
+   - **Duplicate**: another open or done ticket covers the same outcome. Cite it. Overlap alone is not a duplicate; the other ticket must make this one unnecessary.
+
+   `Shipped` and `Duplicate` are claims someone else will act on, possibly by closing the ticket automatically (`factory-autopilot.md`), so the evidence must be checkable, not a paraphrase.
 
 5. **Write the working doc** (create it per `factory-log.md` if absent):
    - `## Prep`: `**Verdict:** <verdict> · read at <short-sha> · <ISO timestamp>`, then `**Assumptions:**` as one line each, then the proposed split or the blockers if any. At most 12 lines.
